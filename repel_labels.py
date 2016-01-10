@@ -31,16 +31,14 @@ def repel_text_annotaions(x, y, texts):
 
         delta_x = move_x.sum(axis=1)
         delta_y = move_y.sum(axis=1)
-        q = np.nansum(np.abs(delta_x)) + np.nansum(np.abs(delta_y))
+        print delta_x
+        q = np.sum(np.abs(delta_x) + np.abs(delta_y))
 
         for i, text in enumerate(texts):
                 x, y = text.get_position()
-                if not np.isnan(delta_x[i]):
-                        newx = x + delta_x[i]
-                        text.set_x(newx)
-                if not np.isnan(delta_y[i]):
-                        newy = y + delta_y[i]
-                        text.set_y(newy)
+                newx = x + delta_x[i]
+                newy = y + delta_y[i]
+                text.set_position((newx, newy))
         return texts, q
 
 def iteratively_repel_text_annotaions(x, y, texts, lim=100):
