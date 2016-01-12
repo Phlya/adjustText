@@ -252,13 +252,18 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
         plt.savefig(save_prefix+'0.'+save_format, format=save_format)
     for i in range(lim):
         q1, q2 = np.inf, np.inf
-
-        d_x_text, d_y_text, q1 = repel_text(texts, renderer=r, ax=ax,
-                                            expand=expand_text)
-        d_x_points, d_y_points, q2 = repel_text_from_points(x, y, texts,
+        if text_from_text:
+            d_x_text, d_y_text, q1 = repel_text(texts, renderer=r, ax=ax,
+                                                expand=expand_text)
+        else:
+            d_x_text, d_y_text, q1 = [0]*len(texts), [0]*len(texts), 0
+        if text_from_points:
+            d_x_points, d_y_points, q2 = repel_text_from_points(x, y, texts,
                                                    ax=ax, renderer=r,
                                                    expand=expand_points,
                                                    prefer_move=prefer_move)
+        else:
+            d_x_points, d_y_points, q1 = [0]*len(texts), [0]*len(texts), 0
         dx = np.array(d_x_text) + np.array(d_x_points)
         dy = np.array(d_y_text) + np.array(d_y_points)
         move_texts(texts, dx, dy, bboxes = get_bboxes(texts, r, (1, 1)),
