@@ -22,4 +22,7 @@ plt.show()
 ```
 ![alt tag](https://raw.github.com/Phlya/adjustText/master/examples/mtcars_after.png)
 
+The process can be illustrated by the following animation:
+![alt tag](https://raw.github.com/Phlya/adjustText/master/examples/animation.gif)
+
 The algorithm is highly configurable to adjust it to your particular case. Getting figures convenient to work with is very easy, to get high-quality figures for e.g. publishing can be more complicated.
