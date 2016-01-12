@@ -1,3 +1,4 @@
+from __future__ import division
 from matplotlib import pyplot as plt
 from matplotlib.transforms import Bbox
 import numpy as np
@@ -108,8 +109,8 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
             if bbox.contains(xp, yp):
                 cx, cy = get_midpoint(bbox)
 
-                dir_x = np.sign(round(cx-xp, 1))
-                dir_y = np.sign(round(cx-xp, 1))
+                dir_x = np.sign(round(cx-xp, 3))
+                dir_y = np.sign(round(cx-xp, 3))
 
                 if dir_x == -1:
                     dx = xp - bbox.xmax
@@ -208,7 +209,7 @@ def pull_text_to_respective_points(x, y, texts, renderer=None, ax=None,
     return texts
 
 def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
-                expand_points=(1.2, 1.2), prefer_move = 'y',
+                expand_points=(1.2, 1.2), prefer_move = 'xy',
                 lim=100, precision=0.1, pullback_fraction=0.0,
                 ha = 'center', va = 'top',
                 text_from_text=True,
@@ -226,7 +227,10 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
         expand_points (seq): a tuple/list/... with 2 numbers (x, y) to expand
             texts when repelling them from points; default (1.2, 1.2)
         prefer_move (str or seq(str, str)): specifies where to move the texts
-            (along 'x', 'y' or both - 'xy') when unsure.
+            (along 'x', 'y' or both - 'xy') when unsure, e.g. just away from
+            the respective point. Direction along each axis is random, thus
+            introduces unpredictability (except when np.seed is set); default
+            'xy'
         lim (int): limit of number of iterations
         precision (float): up to which sum of all overlaps along both x and y
             to iterate
