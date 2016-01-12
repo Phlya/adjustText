@@ -266,8 +266,7 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.1, 1.1),
         if text_from_points:
             texts, q2 = repel_text_from_points(x, y, texts, ax=ax, renderer=r,
                                                expand=expand_points,
-                                               prefer_move=prefer_move,
-                                               precision=precision)
+                                               prefer_move=prefer_move)
         if pullback_fraction:
             tests = pull_text_to_respective_points(x, y, texts, renderer=r,
                                                    ax=ax,
