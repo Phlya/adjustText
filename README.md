@@ -1,5 +1,7 @@
 # adjustText
 
+Inspired by **ggrepel** package for R/ggplot2 (https://github.com/slowkow/ggrepel)
+
 ```python
 mtcars = pd.read_csv('mtcars.csv')
 labels = mtcars['Car']
