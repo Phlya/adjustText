@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(name='adjustText',
-      version='0.1',
+      version='0.2',
       description='Iteratively adjust text in matplotlib plots to minimize overlaps',
       author='Ilya Flyamer',
       author_email='flyamer@gmail.com',
