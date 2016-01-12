@@ -1,8 +1,8 @@
 # adjustText
 
 ```python
-mtcars = pd.read_csv('../tmp/mtcars.csv')
-labels = mtcars['Unnamed: 0']
+mtcars = pd.read_csv('mtcars.csv')
+labels = mtcars['Car']
 f = plt.figure()
 r = f.canvas.get_renderer()
 xs, ys = mtcars['wt'], mtcars['mpg']
