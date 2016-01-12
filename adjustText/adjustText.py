@@ -2,8 +2,15 @@ from matplotlib import pyplot as plt
 from matplotlib.transforms import Bbox
 import numpy as np
 
-def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2), precision=0.1,
-               prefer_move='xy', only_use_max_min=False):
+def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
+               only_use_max_min=False):
+    """
+    Repel texts from each other while expanding their bounding boxes by expand
+    (x, y), e.g. (1.2, 1.2) would multiply both width and height by 1.2.
+    Requires a renderer to get the actual sizes of the text, and to that end
+    either one needs to be directly provided, or the axes have to be specified,
+    and the renderer is then got from the axes object.
+    """
     if ax is None:
         ax = plt.gca()
     if renderer is None:
@@ -72,8 +79,19 @@ def get_midpoint(bbox):
     return cx, cy
 
 def repel_text_from_points(x, y, texts, renderer=None, ax=None,
-                           prefer_move='y', expand=(1.2, 1.2), precision=0.1,
-                           only_use_max_min=False):
+                           prefer_move='y', expand=(1.2, 1.2)):
+    """
+    Repel texts from all points specified by x and y while expanding their
+    (texts'!) bounding boxes by expandby  (x, y), e.g. (1.2, 1.2)
+    would multiply both width and height by 1.2. In the case when the text
+    overlaps a point, but there is no definite direction for movement (read,
+    the point is in the very center), moves in random direction by 40% of it's
+    width and/or height depending on prefer_move: 'x' moves along x, 'y' -
+    along 'y', 'xy' - along both.
+    Requires a renderer to get the actual sizes of the text, and to that end
+    either one needs to be directly provided, or the axes have to be specified,
+    and the renderer is then got from the axes object.
+    """
     assert len(x) == len(y)
     if ax is None:
         ax = plt.gca()
@@ -155,6 +173,9 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
 
 def pull_text_to_respective_points(x, y, texts, renderer=None, ax=None,
                                    fraction=0.1, expand=(1.2, 1.2)):
+    """
+    Probably is never useful.
+    """
     if ax is None:
         ax = plt.gca()
     if renderer is None:
@@ -190,10 +211,45 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.1, 1.1),
                 expand_points=(1.1, 1.1), prefer_move = 'y',
                 lim=100, precision=0.1, pullback_fraction=0.0,
                 ha = 'center', va = 'bottom',
-                only_use_max_min=False, text_from_text=True,
+                text_from_text=True,
                 text_from_points=True, save_steps=False, save_prefix='',
                 save_format='png', *args, **kwargs):
-
+    """
+    Args:
+        x (seq): x-coordinates of labelled points
+        y (seq): y-coordinates of labelled points
+        texts (list): a list of text.Text objects to adjust
+        ax (obj): axes object with the plot; if not provided is determined by
+            plt.gca()
+        expand_text (seq): a tuple/list/... with 2 numbers (x, y) to expand
+            texts when repelling them from each other; default (1.1, 1.1)
+        expand_points (seq): a tuple/list/... with 2 numbers (x, y) to expand
+            texts when repelling them from points; default (1.1, 1.1)
+        prefer_move (str or seq(str, str)): specifies where to move the texts
+            (along 'x', 'y' or both - 'xy') when unsure.
+        lim (int): limit of number of iterations
+        precision (float): up to which sum of all overlaps along both x and y
+            to iterate
+        pullback_fraction (float): a fraction of distance between each text and
+            its corresponding point to pull the text back to it; probably never
+            useful and should stay 0
+        ha (str): horizontal alignment of the texts ("left", "center" or
+            "right"). Has a strong effect in the very first cycle; default
+            "center"
+        va (str): vertical alignment of the texts ("bottom", "center" or
+            "top").  Has a strong effect in the very first cycle; default
+            "bottom" (the point below the text)
+        text_from_text (bool): whether to repel texts from each other; default
+            True
+        text_from_points (bool): whether to repel texts from points; default
+            True; can helpful to switch of in extremely crouded plots
+        save_steps (bool): whether to save intermediate steps as images;
+            default False
+        save_prefix (str): a path and/or prefix to the saved steps; default ''
+        save_format (str): a format to save the steps into; default 'png
+        *args and **kwargs: any arguments will be fed into plt.annotate after
+            all the optimization is done just for plotting
+    """
     if ax is None:
         ax = plt.gca()
 	r = ax.get_figure().canvas.get_renderer()
@@ -206,10 +262,7 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.1, 1.1),
         q1, q2 = np.inf, np.inf
         if text_from_text:
             texts, q1 = repel_text(texts, renderer=r, ax=ax,
-                                   expand=expand_text,
-                                   precision=precision,
-                                   prefer_move=prefer_move,
-                                   only_use_max_min=only_use_max_min)
+                                   expand=expand_text)
         if text_from_points:
             texts, q2 = repel_text_from_points(x, y, texts, ax=ax, renderer=r,
                                                expand=expand_points,
