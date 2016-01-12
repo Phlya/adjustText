@@ -5,19 +5,18 @@ Inspired by **ggrepel** package for R/ggplot2 (https://github.com/slowkow/ggrepe
 ```python
 mtcars = pd.read_csv('mtcars.csv')
 labels = mtcars['Car']
-f = plt.figure()
-r = f.canvas.get_renderer()
 xs, ys = mtcars['wt'], mtcars['mpg']
-paths = plt.scatter(xs, ys)
+plt.scatter(xs, ys, s=15, c='r', edgecolors=(1,1,1,0))
 texts = []
 for x, y, s in zip(xs, ys, labels):
-    texts.append(plt.text(x, y, s, bbox={'pad':0.0, 'alpha':0}, size=7))
+    texts.append(plt.text(x, y, s, bbox={'pad':0, 'alpha':0}, size=7))
 
 #plt.show()
 ```
 ![alt tag](https://raw.github.com/Phlya/adjustText/master/examples/mtcars_before.png)
 ```python
-adjust_text(xs, ys, texts, arrowprops=dict(arrowstyle='-', color='k'), bbox={'pad':0, 'alpha':0}, size=7)
+adjust_text(xs, ys, texts, arrowprops=dict(arrowstyle="-", color='k', lw=0.5),
+            bbox={'pad':0, 'alpha':0}, size=7)
 plt.show()
 ```
 ![alt tag](https://raw.github.com/Phlya/adjustText/master/examples/mtcars_after.png)
