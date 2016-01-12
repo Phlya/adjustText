@@ -3,8 +3,44 @@ from matplotlib import pyplot as plt
 from matplotlib.transforms import Bbox
 import numpy as np
 
+def get_bboxes(texts, r, expand):
+    return [i.get_window_extent(r).expanded(*expand).transformed(plt.gca().\
+                                          transData.inverted()) for i in texts]
+
+def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
+    if ax is None:
+        ax = plt.gca()
+    if bboxes is None:    
+        if renderer is None:
+            r = ax.get_figure().canvas.get_renderer()
+        else:
+            r = renderer
+        bboxes = get_bboxes(texts, r, (1, 1))
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+    for i, (text, dx, dy) in enumerate(zip(texts, delta_x, delta_y)):
+        x1, y1, x2, y2 = bboxes[i].extents
+        xp, yp = False, False
+        if x1 + dx < xmin:
+            dx = 0
+            xp = True
+        if x2 + dx > xmax:
+            dx = 0
+            xp = True
+        if y1 + dy < ymin:
+            dy = 0
+            yp = True
+        if y2 + dy > ymax:
+            dy = 0
+            yp = True
+        
+        x, y = text.get_position()
+        newx = x + dx
+        newy = y + dy
+        text.set_position((newx, newy))
+
 def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
-               only_use_max_min=False):
+               only_use_max_min=False, move=False):
     """
     Repel texts from each other while expanding their bounding boxes by expand
     (x, y), e.g. (1.2, 1.2) would multiply both width and height by 1.2.
@@ -18,8 +54,7 @@ def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
         r = ax.get_figure().canvas.get_renderer()
     else:
         r = renderer
-    bboxes = [i.get_window_extent(r).expanded(*expand).transformed(plt.gca().\
-                                          transData.inverted()) for i in texts]
+    bboxes = get_bboxes(texts, r, expand)
 
     overlaps_x = np.zeros((len(bboxes), len(bboxes)))
     overlaps_y = np.zeros((len(bboxes), len(bboxes)))
@@ -50,29 +85,9 @@ def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
     delta_y = (move_y.sum(axis=1)-move_y.sum(axis=0))/2
     
     q = np.sum(np.abs(delta_x) + np.abs(delta_y))
-    xmin, xmax = ax.get_xlim()
-    ymin, ymax = ax.get_ylim()
-    for i, (text, dx, dy) in enumerate(zip(texts, delta_x, delta_y)):
-        x1, y1, x2, y2 = bboxes[i].extents
-        xp, yp = False, False
-        if x1 + dx < xmin:
-            dx = 0
-            xp = True
-        if x2 + dx > xmax:
-            dx = 0
-            xp = True
-        if y1 + dy < ymin:
-            dy = 0
-            yp = True
-        if y2 + dy > ymax:
-            dy = 0
-            yp = True
-            
-        x, y = text.get_position()
-        newx = x + dx
-        newy = y + dy
-        text.set_position((newx, newy))
-    return texts, q
+    if move:
+        move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
+    return delta_x, delta_y, q
 
 def get_midpoint(bbox):
     cx = (bbox.x0+bbox.x1)/2
@@ -80,7 +95,7 @@ def get_midpoint(bbox):
     return cx, cy
 
 def repel_text_from_points(x, y, texts, renderer=None, ax=None,
-                           prefer_move='y', expand=(1.2, 1.2)):
+                           prefer_move='y', expand=(1.2, 1.2), move=False):
     """
     Repel texts from all points specified by x and y while expanding their
     (texts'!) bounding boxes by expandby  (x, y), e.g. (1.2, 1.2)
@@ -100,8 +115,8 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
         r = ax.get_figure().canvas.get_renderer()
     else:
         r = renderer
-    bboxes = [i.get_window_extent(r).expanded(*expand).transformed(plt.gca().\
-                                          transData.inverted()) for i in texts]
+    bboxes = get_bboxes(texts, r, expand)
+    
     move_x = np.zeros((len(bboxes), len(x)))
     move_y = np.zeros((len(bboxes), len(x)))
     for i, bbox in enumerate(bboxes):
@@ -131,15 +146,7 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
                         dx = bbox.width*0.4*np.random.choice([-1, 1])
                     if 'y' in prefer_move:
                         dy = bbox.height*0.4*np.random.choice([-1, 1])
-                
-                else:
-                    if dx / bbox.width - dy / bbox.height > 0.3:
-                        dy = 0
-                    elif dy / bbox.height - dx / bbox.height > 0.3:
-                        dx = 0
-                    else:
-                        pass
-                
+
                 move_x[i, j] = dx
                 move_y[i, j] = dy
     
@@ -147,30 +154,9 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
     delta_y = move_y.sum(axis=1)
                
     q = np.sum(np.abs(delta_x) + np.abs(delta_y))
-    xmin, xmax = ax.get_xlim()
-    ymin, ymax = ax.get_ylim()
-    for i, (text, dx, dy) in enumerate(zip(texts, delta_x, delta_y)):
-        x1, y1, x2, y2 = bboxes[i].extents
-        xp, yp = False, False
-        if x1 + dx < xmin:
-            dx = 0
-            xp = True
-        if x2 + dx > xmax:
-            dx = 0
-            xp = True
-        
-        if y1 + dy < ymin:
-            dy = 0
-            yp = True
-        if y2 + dy > ymax:
-            dy = 0
-            yp = True
-        
-        x, y = text.get_position()
-        newx = x + dx
-        newy = y + dy
-        text.set_position((newx, newy))
-    return texts, q
+    if move:
+        move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
+    return delta_x, delta_y, q
 
 def pull_text_to_respective_points(x, y, texts, renderer=None, ax=None,
                                    fraction=0.1, expand=(1.2, 1.2)):
@@ -185,17 +171,12 @@ def pull_text_to_respective_points(x, y, texts, renderer=None, ax=None,
         r = renderer
     bboxes = [i.get_window_extent(r).expanded(*expand).transformed(plt.gca().\
                                           transData.inverted()) for i in texts]
-    delta_x = []
-    delta_y = []
+
     for i, (bbox, xp, yp) in enumerate(zip(bboxes, x, y)):
         if not bbox.contains(xp, yp):
             cx, cy = get_midpoint(bbox)
             dx = cx - xp
             dy = cy - yp
-            #d = np.sqrt(dx**2 + dy**2) * fraction
-            #k = np.abs(dy / d)
-            #dy = d * k * np.sign(dy)
-            #dx = d*(1 - k) * np.sign(dx)
             x, y = texts[i].get_position()
             if dx/x > dy/y:
                 newx = x - dx * fraction
@@ -269,19 +250,20 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
         plt.savefig(save_prefix+'0.'+save_format, format=save_format)
     for i in range(lim):
         q1, q2 = np.inf, np.inf
-        if text_from_text:
-            texts, q1 = repel_text(texts, renderer=r, ax=ax,
-                                   expand=expand_text)
-        if text_from_points:
-            texts, q2 = repel_text_from_points(x, y, texts, ax=ax, renderer=r,
-                                               expand=expand_points,
-                                               prefer_move=prefer_move)
-        if pullback_fraction:
-            tests = pull_text_to_respective_points(x, y, texts, renderer=r,
-                                                   ax=ax,
-                                                   fraction=pullback_fraction,
-                                                   expand=expand_points)
-        plt.savefig(save_prefix+str(i+1)+'.'+save_format, format=save_format)
+
+        d_x_text, d_y_text, q1 = repel_text(texts, renderer=r, ax=ax,
+                                            expand=expand_text)
+        d_x_points, d_y_points, q2 = repel_text_from_points(x, y, texts,
+                                                   ax=ax, renderer=r,
+                                                   expand=expand_points,
+                                                   prefer_move=prefer_move)
+        dx = np.array(d_x_text) + np.array(d_x_points)
+        dy = np.array(d_y_text) + np.array(d_y_points)
+        move_texts(texts, dx, dy, bboxes = get_bboxes(texts, r, (1, 1)),
+                   ax=ax)
+        if save_steps:
+            plt.savefig(save_prefix+str(i+1)+'.'+save_format,
+                        format=save_format)
         q = np.array([q1, q2])[np.array([q1, q2])<np.inf]
         if i>=5 and np.all(q <= precision):
             break
