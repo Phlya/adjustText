@@ -22,4 +22,4 @@ plt.show()
 ```
 ![alt tag](https://raw.github.com/Phlya/adjustText/master/examples/mtcars_after.png)
 
-Unfortunately there is some randomness in the algorithm (I don't know where it comes from, except for a little randomness on the edges of the image), so the result is slightly different each time and is not necessarily equally good (but it's never bad, at least with this example!).
+The algorithm is highly configurable to adjust it to your particular case. Getting figures convenient to work with is very easy, to get high-quality figures for e.g. publishing can be more complicated.
