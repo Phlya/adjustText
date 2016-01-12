@@ -59,11 +59,6 @@ def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2), precision=0.1,
         if y2 + dy > ymax:
             dy = 0
             yp = True
-        
-        if xp and dy == 0:
-            dy += (np.random.random()-0.5)/(y2-y1)
-        if yp and dx == 0:
-            dx += (np.random.random()-0.5)/(x2-x1)
             
         x, y = text.get_position()
         newx = x + dx
@@ -152,11 +147,6 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
             dy = 0
             yp = True
         
-        if xp and dy == 0:
-            dy += (np.random.random()-0.5)*(y2-y1)
-        if yp and dx == 0:
-            dx += (np.random.random()-0.5)*(x2-x1)
-        
         x, y = text.get_position()
         newx = x + dx
         newy = y + dy
@@ -199,17 +189,17 @@ def pull_text_to_respective_points(x, y, texts, renderer=None, ax=None,
 def adjust_text(x, y, texts, ax=None, expand_text = (1.1, 1.1),
                 expand_points=(1.1, 1.1), prefer_move = 'y',
                 lim=100, precision=0.1, pullback_fraction=0.0,
+                ha = 'center', va = 'bottom',
                 only_use_max_min=False, text_from_text=True,
                 text_from_points=True, save_steps=False, save_prefix='',
                 save_format='png', *args, **kwargs):
-    #history1 = [np.inf]*5
-    #history2 = [np.inf]*5
+
     if ax is None:
         ax = plt.gca()
 	r = ax.get_figure().canvas.get_renderer()
     for text in texts:
-        text.set_horizontalalignment('center')
-        text.set_verticalalignment('bottom')
+        text.set_horizontalalignment(ha)
+        text.set_verticalalignment(va)
     if save_steps:
         plt.savefig(save_prefix+'0.'+save_format, format=save_format)
     for i in range(lim):
@@ -233,20 +223,13 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.1, 1.1),
                                                    expand=expand_points)
         plt.savefig(save_prefix+str(i+1)+'.'+save_format, format=save_format)
         q = np.array([q1, q2])[np.array([q1, q2])<np.inf]
-        if i>=5 and np.all(q <= precision):# or (q1 >= max(history1) and q2 >= max(history2)):
+        if i>=5 and np.all(q <= precision):
             break
-        #if text_from_text:
-        #    history1.pop(0)
-        #    history1.append(round(q1, 3))
-        #if text_from_points:
-        #    history2.pop(0)
-        #    history2.append(round(q2, 3))
-    #print i, q1, q2
+        
     for j, text in enumerate(texts):
         ax.annotate(text.get_text(), xy = (x[j], y[j]),
                     xytext=text.get_position(),
-                    horizontalalignment='center',
-                    verticalalignment='bottom', *args, **kwargs)
+                    horizontalalignment=ha,
+                    verticalalignment=va, *args, **kwargs)
         texts[j].set_visible(False)
     plt.savefig(save_prefix+str(i+1)+'.'+save_format, format=save_format)
-    #history1[-1], history2[-1]
