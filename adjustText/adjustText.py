@@ -195,7 +195,7 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
                 ha = 'center', va = 'top',
                 text_from_text=True,
                 text_from_points=True, save_steps=False, save_prefix='',
-                save_format='png', *args, **kwargs):
+                save_format='png', draggable=True, *args, **kwargs):
     """
     Iteratively adjusts the locations of texts. In each iteration first moves
     all texts away from each other, then all texts away from points. In the end
@@ -239,6 +239,8 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
         save_format (str): a format to save the steps into; default 'png
         *args and **kwargs: any arguments will be fed into plt.annotate after
             all the optimization is done just for plotting
+        draggable (bool): whether to make the annotations draggable; default
+            True
     """
     if ax is None:
         ax = plt.gca()
@@ -269,9 +271,11 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
             break
         
     for j, text in enumerate(texts):
-        ax.annotate(text.get_text(), xy = (x[j], y[j]),
+        a = ax.annotate(text.get_text(), xy = (x[j], y[j]),
                     xytext=text.get_position(),
                     horizontalalignment=ha,
-                    verticalalignment=va, *args, **kwargs).draggable()
+                    verticalalignment=va, *args, **kwargs)
+        if draggable:
+            a.draggable()
         texts[j].set_visible(False)
     plt.savefig(save_prefix+str(i+1)+'.'+save_format, format=save_format)
