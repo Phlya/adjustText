@@ -207,10 +207,10 @@ def pull_text_to_respective_points(x, y, texts, renderer=None, ax=None,
             texts[i].set_position((newx, newy))
     return texts
 
-def adjust_text(x, y, texts, ax=None, expand_text = (1.1, 1.1),
-                expand_points=(1.1, 1.1), prefer_move = 'y',
+def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
+                expand_points=(1.2, 1.2), prefer_move = 'y',
                 lim=100, precision=0.1, pullback_fraction=0.0,
-                ha = 'center', va = 'bottom',
+                ha = 'center', va = 'top',
                 text_from_text=True,
                 text_from_points=True, save_steps=False, save_prefix='',
                 save_format='png', *args, **kwargs):
@@ -222,9 +222,9 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.1, 1.1),
         ax (obj): axes object with the plot; if not provided is determined by
             plt.gca()
         expand_text (seq): a tuple/list/... with 2 numbers (x, y) to expand
-            texts when repelling them from each other; default (1.1, 1.1)
+            texts when repelling them from each other; default (1.2, 1.2)
         expand_points (seq): a tuple/list/... with 2 numbers (x, y) to expand
-            texts when repelling them from points; default (1.1, 1.1)
+            texts when repelling them from points; default (1.2, 1.2)
         prefer_move (str or seq(str, str)): specifies where to move the texts
             (along 'x', 'y' or both - 'xy') when unsure.
         lim (int): limit of number of iterations
@@ -238,7 +238,7 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.1, 1.1),
             "center"
         va (str): vertical alignment of the texts ("bottom", "center" or
             "top").  Has a strong effect in the very first cycle; default
-            "bottom" (the point below the text)
+            "top" (the point above the text)
         text_from_text (bool): whether to repel texts from each other; default
             True
         text_from_points (bool): whether to repel texts from points; default
