@@ -272,6 +272,6 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
         ax.annotate(text.get_text(), xy = (x[j], y[j]),
                     xytext=text.get_position(),
                     horizontalalignment=ha,
-                    verticalalignment=va, *args, **kwargs)
+                    verticalalignment=va, *args, **kwargs).draggable()
         texts[j].set_visible(False)
     plt.savefig(save_prefix+str(i+1)+'.'+save_format, format=save_format)
