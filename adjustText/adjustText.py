@@ -216,6 +216,11 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
                 text_from_points=True, save_steps=False, save_prefix='',
                 save_format='png', *args, **kwargs):
     """
+    Iteratively adjusts the locations of texts. In each iteration first moves
+    all texts away from each other, then all texts away from points. In the end
+    hides texts and substitutes them with annotations to link them to the
+    rescpective points.
+    
     Args:
         x (seq): x-coordinates of labelled points
         y (seq): y-coordinates of labelled points
