@@ -196,8 +196,8 @@ def pull_text_to_respective_points(x, y, texts, renderer=None, ax=None,
             texts[i].set_position((newx, newy))
     return texts
 
-def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
-                expand_points=(1.3, 1.3), prefer_move = 'y',
+def adjust_text(x, y, texts, ax=None, expand_text = (1.1, 1.1),
+                expand_points=(1.1, 1.1), prefer_move = 'y',
                 lim=100, precision=0.1, pullback_fraction=0.0,
                 only_use_max_min=False, text_from_text=True,
                 text_from_points=True, save_steps=False, save_prefix='',
