@@ -1,7 +1,7 @@
 #Examples
 #####Some usage examples and ways to make the figure better than what default options yield.
 
-######A quite simple example from http://stackoverflow.com/q/19073683/1304161, but we'll make quite a nice figure in the end.
+######A very simple example from http://stackoverflow.com/q/19073683/1304161, but we'll make quite a nice figure in the end.
 
 ```python
 together = [(0, 1.0, 0.4), (25, 1.0127692669427917, 0.41), (50, 1.016404709797609, 0.41), (75, 1.1043426359673716, 0.42), (100, 1.1610446924342996, 0.44), (125, 1.1685687930691457, 0.43), (150, 1.3486407784550272, 0.45), (250, 1.4013999168008104, 0.45)]
