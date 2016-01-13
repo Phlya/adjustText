@@ -125,7 +125,7 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
                 cx, cy = get_midpoint(bbox)
 
                 dir_x = np.sign(round(cx-xp, 3))
-                dir_y = np.sign(round(cx-xp, 3))
+                dir_y = np.sign(round(cy-yp, 3))
 
                 if dir_x == -1:
                     dx = xp - bbox.xmax
