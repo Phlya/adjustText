@@ -196,7 +196,8 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
                 ha = 'center', va = 'top',
                 text_from_text=True,
                 text_from_points=True, save_steps=False, save_prefix='',
-                save_format='png', draggable=True, *args, **kwargs):
+                save_format='png', add_step_numbers=True, draggable=True,
+                *args, **kwargs):
     """
     Iteratively adjusts the locations of texts. In each iteration first moves
     all texts away from each other, then all texts away from points. In the end
@@ -244,6 +245,8 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
         save_format (str): a format to save the steps into; default 'png
         *args and **kwargs: any arguments will be fed into plt.annotate after
             all the optimization is done just for plotting
+        add_step_numbers (bool): whether to add step numbers as titles to the
+            images of saving steps
         draggable (bool): whether to make the annotations draggable; default
             True
     """
@@ -254,6 +257,8 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
         text.set_horizontalalignment(ha)
         text.set_verticalalignment(va)
     if save_steps:
+        if add_step_numbers:
+            plt.title(0)
         plt.savefig(save_prefix+'0.'+save_format, format=save_format)
     for i in range(lim):
         q1, q2 = np.inf, np.inf
@@ -274,6 +279,8 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
         move_texts(texts, dx*force_text, dy*force_points,
                    bboxes = get_bboxes(texts, r, (1, 1)), ax=ax)
         if save_steps:
+            if add_step_numbers:
+                plt.title(i+1)
             plt.savefig(save_prefix+str(i+1)+'.'+save_format,
                         format=save_format)
         q = np.array([q1, q2])[np.array([q1, q2])<np.inf]
@@ -288,4 +295,7 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
         if draggable:
             a.draggable()
         texts[j].set_visible(False)
-    plt.savefig(save_prefix+str(i+1)+'.'+save_format, format=save_format)
+    if save_steps:
+        if add_step_numbers:
+            plt.title(i+1)
+        plt.savefig(save_prefix+str(i+1)+'.'+save_format, format=save_format)
