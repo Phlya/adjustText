@@ -20,19 +20,16 @@ def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
     ymin, ymax = ax.get_ylim()
     for i, (text, dx, dy) in enumerate(zip(texts, delta_x, delta_y)):
         x1, y1, x2, y2 = bboxes[i].extents
-        xp, yp = False, False
+        x1, x2 = min(x1, x2), max(x1, x2)
+        y1, y2 = min(y1, y2), max(y1, y2)
         if x1 + dx < xmin:
             dx = 0
-            xp = True
         if x2 + dx > xmax:
             dx = 0
-            xp = True
         if y1 + dy < ymin:
             dy = 0
-            yp = True
         if y2 + dy > ymax:
             dy = 0
-            yp = True
         
         x, y = text.get_position()
         newx = x + dx
@@ -158,6 +155,38 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
         move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
     return delta_x, delta_y, q
 
+def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
+                         expand=None):
+    if ax is None:
+        ax = plt.gca()
+    if renderer is None:
+        r = ax.get_figure().canvas.get_renderer()
+    else:
+        r = renderer
+    if expand is None:
+        expand = (1, 1)
+    if bboxes is None:
+        bboxes = get_bboxes(texts, r, expand=expand)
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+    for i, bbox in enumerate(bboxes):
+        x1, y1, x2, y2 = bboxes[i].extents
+        x1, x2 = min(x1, x2), max(x1, x2)
+        y1, y2 = min(y1, y2), max(y1, y2)
+        if x1 < xmin:
+            dx = xmin - x1
+        if x2 > xmax:
+            dx = xmax - x2
+        if y1 < ymin:
+            dy = ymin - y1
+        if y2 > ymax:
+            dy = ymax - y2
+        if dx or dy:
+            x, y = texts[i].get_position()
+            newx, newy = x + dx, y + dy
+            texts[i].set_position((newx, newy))
+        return texts
+
 def pull_text_to_respective_points(x, y, texts, renderer=None, ax=None,
                                    fraction=0.1, expand=(1.2, 1.2)):
     """
@@ -260,6 +289,7 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
         if add_step_numbers:
             plt.title(0)
         plt.savefig(save_prefix+'0.'+save_format, format=save_format)
+    repel_text_from_axes(texts, ax, renderer=r)
     for i in range(lim):
         q1, q2 = np.inf, np.inf
         if text_from_text:
