@@ -173,6 +173,7 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
         x1, y1, x2, y2 = bboxes[i].extents
         x1, x2 = min(x1, x2), max(x1, x2)
         y1, y2 = min(y1, y2), max(y1, y2)
+        dx, dy = 0, 0
         if x1 < xmin:
             dx = xmin - x1
         if x2 > xmax:
