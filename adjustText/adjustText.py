@@ -81,8 +81,8 @@ def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
     move_x = overlaps_x*overlap_directions_x
     move_y = overlaps_y*overlap_directions_y
 
-    delta_x = (move_x.sum(axis=1)-move_x.sum(axis=0))/2
-    delta_y = (move_y.sum(axis=1)-move_y.sum(axis=0))/2
+    delta_x = move_x.sum(axis=1)-move_x.sum(axis=0)
+    delta_y = move_y.sum(axis=1)-move_y.sum(axis=0)
     
     q = np.sum(np.abs(delta_x) + np.abs(delta_y))
     if move:
@@ -190,8 +190,9 @@ def pull_text_to_respective_points(x, y, texts, renderer=None, ax=None,
     return texts
 
 def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
-                expand_points=(1.2, 1.2), prefer_move = 'xy',
-                lim=100, precision=0.1, pullback_fraction=0.0,
+                expand_points=(1.2, 1.2), prefer_move = 'xy', force_text=0.5,
+                force_points=1.0, lim=100, precision=0.1,
+                pullback_fraction=0.0,
                 ha = 'center', va = 'top',
                 text_from_text=True,
                 text_from_points=True, save_steps=False, save_prefix='',
@@ -217,6 +218,10 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
             the respective point. Direction along each axis is random, thus
             introduces unpredictability (except when np.seed is set); default
             'xy'
+        force_text (float): the repel force from texts is multiplied by this
+            value; default 0.5
+        force_points (float): the repel force from points is multiplied by this
+            value; default 1.0
         lim (int): limit of number of iterations
         precision (float): up to which sum of all overlaps along both x and y
             to iterate
@@ -266,8 +271,8 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
             d_x_points, d_y_points, q1 = [0]*len(texts), [0]*len(texts), 0
         dx = np.array(d_x_text) + np.array(d_x_points)
         dy = np.array(d_y_text) + np.array(d_y_points)
-        move_texts(texts, dx, dy, bboxes = get_bboxes(texts, r, (1, 1)),
-                   ax=ax)
+        move_texts(texts, dx*force_text, dy*force_points,
+                   bboxes = get_bboxes(texts, r, (1, 1)), ax=ax)
         if save_steps:
             plt.savefig(save_prefix+str(i+1)+'.'+save_format,
                         format=save_format)
