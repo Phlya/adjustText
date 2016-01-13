@@ -219,10 +219,10 @@ def pull_text_to_respective_points(x, y, texts, renderer=None, ax=None,
     return texts
 
 def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
-                expand_points=(1.2, 1.2), prefer_move = 'xy', force_text=0.5,
-                force_points=1.0, lim=100, precision=0.1,
-                pullback_fraction=0.0,
-                ha = 'center', va = 'top',
+                expand_points=(1.2, 1.2), prefer_move = 'xy', 
+                force_text=0.5, force_points=1.0, lim=100, precision=0.1,
+                pullback_fraction=0.0, only_move={},
+                ha = 'center', va = 'center',
                 text_from_text=True,
                 text_from_points=True, save_steps=False, save_prefix='',
                 save_format='png', add_step_numbers=True, draggable=True,
@@ -263,7 +263,7 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
             "center"
         va (str): vertical alignment of the texts ("bottom", "center" or
             "top").  Has a strong effect in the very first cycle; default
-            "top" (the point above the text)
+            "center"
         text_from_text (bool): whether to repel texts from each other; default
             True
         text_from_points (bool): whether to repel texts from points; default
@@ -304,6 +304,15 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
                                                    prefer_move=prefer_move)
         else:
             d_x_points, d_y_points, q1 = [0]*len(texts), [0]*len(texts), 0
+        if only_move:
+            if 'x' not in only_move['text']:
+                d_x_text = np.zeros_like(d_x_text)
+            if 'y' not in only_move['text']:
+                d_y_text = np.zeros_like(d_y_text)
+            if 'x' not in only_move['points']:
+                d_x_points = np.zeros_like(d_x_points)
+            if 'y' not in only_move['points']:
+                d_y_points = np.zeros_like(d_y_points)
         dx = np.array(d_x_text) + np.array(d_x_points)
         dy = np.array(d_y_text) + np.array(d_y_points)
         move_texts(texts, dx*force_text, dy*force_points,
