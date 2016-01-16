@@ -1,11 +1,45 @@
 from __future__ import division
 from matplotlib import pyplot as plt
-from matplotlib.transforms import Bbox
+from itertools import product
 import numpy as np
 
-def get_bboxes(texts, r, expand):
-    return [i.get_window_extent(r).expanded(*expand).transformed(plt.gca().\
+def get_bboxes(texts, r, expand, ax=None):
+    if ax is None:
+        ax = plt.gca()
+    return [i.get_window_extent(r).expanded(*expand).transformed(ax.\
                                           transData.inverted()) for i in texts]
+
+def get_midpoint(bbox):
+    cx = (bbox.x0+bbox.x1)/2
+    cy = (bbox.y0+bbox.y1)/2
+    return cx, cy
+
+def get_points_inside_bbox(x, y, bbox):
+    x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
+    x_in = np.logical_and(x>=x1, x<=x2)
+    y_in = np.logical_and(y>=y1, y<=y2)
+    return np.where(x_in & y_in)[0]
+
+def overlap_bbox_and_point(bbox, xp, yp):
+    cx, cy = get_midpoint(bbox)
+
+    dir_x = np.sign(cx-xp)
+    dir_y = np.sign(cy-yp)
+
+    if dir_x == -1:
+        dx = xp - bbox.xmax
+    elif dir_x == 1:
+        dx = xp - bbox.xmin
+    else:
+        dx = 0
+
+    if dir_y == -1:
+        dy = yp - bbox.ymax
+    elif dir_y == 1:
+        dy = yp - bbox.ymin
+    else:
+        dy = 0
+    return dx, dy
 
 def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
     if ax is None:
@@ -19,9 +53,8 @@ def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
     for i, (text, dx, dy) in enumerate(zip(texts, delta_x, delta_y)):
-        x1, y1, x2, y2 = bboxes[i].extents
-        x1, x2 = min(x1, x2), max(x1, x2)
-        y1, y2 = min(y1, y2), max(y1, y2)
+        bbox = bboxes[i]
+        x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
         if x1 + dx < xmin:
             dx = 0
         if x2 + dx > xmax:
@@ -35,6 +68,35 @@ def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
         newx = x + dx
         newy = y + dy
         text.set_position((newx, newy))
+
+def optimally_align_text(x, y, texts, expand, renderer=None, ax=None):
+    """
+    For all text objects find alignment that causes the least overlap with
+    points and other texts and apply it
+    """
+    if ax is None:
+        ax = plt.gca()
+    if renderer is None:
+        r = ax.get_figure().canvas.get_renderer()
+    else:
+        r = renderer
+    bboxes = get_bboxes(texts, r, expand)
+    ha = ['left', 'right', 'center']
+    va = ['bottom', 'top', 'center']
+    alignment = list(product(ha, va))
+    for i, text in enumerate(texts):
+        counts = []
+        for h, v in alignment:
+            text.set_ha(h)
+            text.set_va(v)
+            bbox = text.get_window_extent(r).expanded(*expand).\
+                                       transformed(ax.transData.inverted())
+            c = len(get_points_inside_bbox(x, y, bbox))
+            counts.append(c + bbox.count_overlaps(bboxes[:i]+bboxes[i+1:]))
+        a = np.argmin(counts)
+        text.set_ha(alignment[a][0])
+        text.set_va(alignment[a][1])
+    return texts
 
 def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
                only_use_max_min=False, move=False):
@@ -52,28 +114,32 @@ def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
     else:
         r = renderer
     bboxes = get_bboxes(texts, r, expand)
+    xmins = [bbox.xmin for bbox in bboxes]
+    xmaxs = [bbox.xmax for bbox in bboxes]
+    ymaxs = [bbox.ymax for bbox in bboxes]
+    ymins = [bbox.ymin for bbox in bboxes]
 
     overlaps_x = np.zeros((len(bboxes), len(bboxes)))
-    overlaps_y = np.zeros((len(bboxes), len(bboxes)))
-    for i, bbox1 in enumerate(bboxes):
-        for j, bbox2 in enumerate(bboxes[i+1:]):
-            j += i
-            j += 1
-            try:
-                x, y = bbox1.intersection(bbox1, bbox2).size
-                overlaps_x[i, j] = x
-                overlaps_y[i, j] = y
-            except AttributeError:
-                pass
+    overlaps_y = np.zeros_like(overlaps_x)
     overlap_directions_x = np.zeros_like(overlaps_x)
     overlap_directions_y = np.zeros_like(overlaps_y)
-    inds, cols = np.where(overlaps_x!=0)
-
-    for i in range(len(inds)):
-        i, j = inds[i], cols[i]
-        direction = np.sign(bboxes[i].extents - bboxes[j].extents)[:2]
-        overlap_directions_x[i, j] = direction[0]
-        overlap_directions_y[i, j] = direction[1]
+    for i, bbox1 in enumerate(bboxes):
+        overlaps_lb = get_points_inside_bbox(xmins, ymins, bbox1)
+        overlaps_lt = get_points_inside_bbox(xmins, ymaxs, bbox1)
+        overlaps_rb = get_points_inside_bbox(xmaxs, ymins, bbox1)
+        overlaps_lt = get_points_inside_bbox(xmaxs, ymaxs, bbox1)
+        overlaps = sorted(list(set(np.concatenate([overlaps_lb,
+                                                   overlaps_lt,
+                                                   overlaps_rb,
+                                                   overlaps_lt]))))
+        for j in overlaps:
+            bbox2 = bboxes[j]
+            x, y = bbox1.intersection(bbox1, bbox2).size
+            overlaps_x[i, j] = x
+            overlaps_y[i, j] = y
+            direction = np.sign(bbox1.extents - bbox2.extents)[:2]
+            overlap_directions_x[i, j] = direction[0]
+            overlap_directions_y[i, j] = direction[1]
 
     move_x = overlaps_x*overlap_directions_x
     move_y = overlaps_y*overlap_directions_y
@@ -86,42 +152,15 @@ def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
         move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
     return delta_x, delta_y, q
 
-def get_midpoint(bbox):
-    cx = (bbox.x0+bbox.x1)/2
-    cy = (bbox.y0+bbox.y1)/2
-    return cx, cy
-
-def overlap_bbox_and_point(bbox, xp, yp):
-    cx, cy = get_midpoint(bbox)
-
-    dir_x = np.sign(round(cx-xp, 3))
-    dir_y = np.sign(round(cy-yp, 3))
-
-    if dir_x == -1:
-        dx = xp - bbox.xmax
-    elif dir_x == 1:
-        dx = xp - bbox.xmin
-    else:
-        dx = 0
-
-    if dir_y == -1:
-        dy = yp - bbox.ymax
-    elif dir_y == 1:
-        dy = yp - bbox.ymin
-    else:
-        dy = 0
-
-    return dx, dy
 
 def repel_text_from_points(x, y, texts, renderer=None, ax=None,
-                           prefer_move='y', expand=(1.2, 1.2), move=False):
+                           expand=(1.2, 1.2), move=False):
     """
     Repel texts from all points specified by x and y while expanding their
     (texts'!) bounding boxes by expandby  (x, y), e.g. (1.2, 1.2)
     would multiply both width and height by 1.2. In the case when the text
     overlaps a point, but there is no definite direction for movement, moves
     in random direction by 40% of it's width and/or height depending on
-    prefer_move: 'x' moves along x, 'y' - along 'y', 'xy' - along both.
     Requires a renderer to get the actual sizes of the text, and to that end
     either one needs to be directly provided, or the axes have to be specified,
     and the renderer is then got from the axes object.
@@ -138,19 +177,10 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
     move_x = np.zeros((len(bboxes), len(x)))
     move_y = np.zeros((len(bboxes), len(x)))
     for i, bbox in enumerate(bboxes):
-        x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
-        x_in = np.logical_and(x>=x1, x<=x2)
-        y_in = np.logical_and(y>=y1, y<=y2)
-        xy_in = np.where(x_in * y_in)[0]
+        xy_in = get_points_inside_bbox(x, y, bbox)
         for j in xy_in:
             xp, yp = x[j], y[j]
             dx, dy = overlap_bbox_and_point(bbox, xp, yp)
-
-            if dx == 0 and dy == 0:
-                if 'x' in prefer_move:
-                    dx = bbox.width*0.4*np.random.choice([-1, 1])
-                if 'y' in prefer_move:
-                    dy = bbox.height*0.4*np.random.choice([-1, 1])
 
             move_x[i, j] = dx
             move_y[i, j] = dy
@@ -178,9 +208,7 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
     for i, bbox in enumerate(bboxes):
-        x1, y1, x2, y2 = bboxes[i].extents
-        x1, x2 = min(x1, x2), max(x1, x2)
-        y1, y2 = min(y1, y2), max(y1, y2)
+        x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
         dx, dy = 0, 0
         if x1 < xmin:
             dx = xmin - x1
@@ -194,15 +222,14 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
             x, y = texts[i].get_position()
             newx, newy = x + dx, y + dy
             texts[i].set_position((newx, newy))
-        return texts
+    return texts
 
-def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
-                expand_points=(1.2, 1.2), prefer_move = 'xy',
-                force_text=0.5, force_points=1.0, lim=100, precision=0,
-                only_move={}, ha = 'center', va = 'center',
-                text_from_text=True, text_from_points=True, save_steps=False,
-                save_prefix='', save_format='png', add_step_numbers=True,
-                draggable=True, *args, **kwargs):
+def adjust_text(x, y, texts, ax=None, expand_text=(1.2, 1.2), autoalign=True,
+                expand_points=(1.2, 1.2), force_text=0.5, force_points=0.5,
+                lim=100, precision=10**-10, only_move={}, text_from_text=True,
+                text_from_points=True, save_steps=False, save_prefix='',
+                save_format='png', add_step_numbers=True, draggable=True,
+                *args, **kwargs):
     """
     Iteratively adjusts the locations of texts. First moves all texts that are
     outside the axes limits inside. Then in each iteration moves all texts away
@@ -219,15 +246,10 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
             texts when repelling them from each other; default (1.2, 1.2)
         expand_points (seq): a tuple/list/... with 2 numbers (x, y) to expand
             texts when repelling them from points; default (1.2, 1.2)
-        prefer_move (str or seq(str, str)): specifies where to move the texts
-            (along 'x', 'y' or both - 'xy') when unsure, e.g. just away from
-            the respective point. Direction along each axis is random, thus
-            introduces unpredictability (except when np.seed is set); default
-            'xy'
         force_text (float): the repel force from texts is multiplied by this
             value; default 0.5
         force_points (float): the repel force from points is multiplied by this
-            value; default 1.0
+            value; default 0.5
         lim (int): limit of number of iterations
         precision (float): up to which sum of all overlaps along both x and y
             to iterate; may need to increase for complicated situations;
@@ -238,12 +260,8 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
             along either of the axes due to overlaps with points, but let it
             happen if there is an overlap with texts: only_move={'points':'y',
             'text':'xy'}. Default: None, so everything is allowed.
-        ha (str): horizontal alignment of the texts ("left", "center" or
-            "right"). Has a strong effect in the very first cycle; default
-            "center"
-        va (str): vertical alignment of the texts ("bottom", "center" or
-            "top").  Has a strong effect in the very first cycle; default
-            "center"
+        autoalign (bool): If True, the best alignment of all texts will be
+            determined automatically before running the iterative adjustment
         text_from_text (bool): whether to repel texts from each other; default
             True
         text_from_points (bool): whether to repel texts from points; default
@@ -263,14 +281,20 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
         ax = plt.gca()
 	r = ax.get_figure().canvas.get_renderer()
     orig_xy = [text.get_position() for text in texts]
+    orig_x = [xy[0] for xy in orig_xy]
+    orig_y = [xy[1] for xy in orig_xy]
     for text in texts:
-        text.set_horizontalalignment(ha)
-        text.set_verticalalignment(va)
+        text.set_va('center')
+        text.set_ha('center')
+    if autoalign:
+        texts = optimally_align_text(orig_x, orig_y, texts,
+                                     expand=expand_points, renderer=r, ax=ax)
+
     if save_steps:
         if add_step_numbers:
             plt.title(0)
         plt.savefig(save_prefix+'0.'+save_format, format=save_format)
-    repel_text_from_axes(texts, ax, renderer=r)
+    texts = repel_text_from_axes(texts, ax, renderer=r, expand=expand_points)
     for i in range(lim):
         q1, q2 = np.inf, np.inf
         if text_from_text:
@@ -281,19 +305,20 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
         if text_from_points:
             d_x_points, d_y_points, q2 = repel_text_from_points(x, y, texts,
                                                    ax=ax, renderer=r,
-                                                   expand=expand_points,
-                                                   prefer_move=prefer_move)
+                                                   expand=expand_points)
         else:
             d_x_points, d_y_points, q1 = [0]*len(texts), [0]*len(texts), 0
         if only_move:
-            if 'x' not in only_move['text']:
-                d_x_text = np.zeros_like(d_x_text)
-            if 'y' not in only_move['text']:
-                d_y_text = np.zeros_like(d_y_text)
-            if 'x' not in only_move['points']:
-                d_x_points = np.zeros_like(d_x_points)
-            if 'y' not in only_move['points']:
-                d_y_points = np.zeros_like(d_y_points)
+            if 'text' in only_move:
+                if 'x' not in only_move['text']:
+                    d_x_text = np.zeros_like(d_x_text)
+                if 'y' not in only_move['text']:
+                    d_y_text = np.zeros_like(d_y_text)
+            if 'points' in only_move:
+                if 'x' not in only_move['points']:
+                    d_x_points = np.zeros_like(d_x_points)
+                if 'y' not in only_move['points']:
+                    d_y_points = np.zeros_like(d_y_points)
         dx = np.array(d_x_text) + np.array(d_x_points)
         dy = np.array(d_y_text) + np.array(d_y_points)
         move_texts(texts, dx*force_text, dy*force_points,
@@ -303,15 +328,14 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
                 plt.title(i+1)
             plt.savefig(save_prefix+str(i+1)+'.'+save_format,
                         format=save_format)
-        q = np.array([q1, q2])[np.array([q1, q2])<np.inf]
-        if i>=5 and np.all(q <= precision):
+        q = np.sum(np.array([q1, q2])[np.array([q1, q2])<np.inf])
+        if i>=5 and q <= precision:
             break
 
     for j, text in enumerate(texts):
         a = ax.annotate(text.get_text(), xy = (orig_xy[j]),
-                    xytext=text.get_position(),
-                    horizontalalignment=ha,
-                    verticalalignment=va, *args, **kwargs)
+                    xytext=text.get_position(), *args, **kwargs)
+        a.__dict__.update(text.__dict__)
         if draggable:
             a.draggable()
         texts[j].remove()

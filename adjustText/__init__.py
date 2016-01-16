@@ -1,1 +1,1 @@
-from adjustText import adjust_text
+from adjustText import *
