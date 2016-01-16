@@ -6,6 +6,11 @@ The idea is that often when we want to label multiple points on a graph the text
 
 See more examples [here].
 
+Should be installable from pipy!
+```
+pip install adjustText
+```
+
 Important point is to supply the same parameters to the text objects when creating them and the adjustment function - they are not propagsated (now) - the function creates annotations in place of texts with the provided parameters.
 
 ```python
