@@ -298,6 +298,7 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
     if ax is None:
         ax = plt.gca()
 	r = ax.get_figure().canvas.get_renderer()
+    orig_xy = [text.get_position() for text in texts]
     for text in texts:
         text.set_horizontalalignment(ha)
         text.set_verticalalignment(va)
@@ -343,7 +344,7 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
             break
 
     for j, text in enumerate(texts):
-        a = ax.annotate(text.get_text(), xy = (x[j], y[j]),
+        a = ax.annotate(text.get_text(), xy = (orig_xy[j]),
                     xytext=text.get_position(),
                     horizontalalignment=ha,
                     verticalalignment=va, *args, **kwargs)
