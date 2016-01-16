@@ -11,7 +11,6 @@ Should be installable from pipy!
 pip install adjustText
 ```
 
-Important point is to supply the same parameters to the text objects when creating them and the adjustment function - they are not propagsated (now) - the function creates annotations in place of texts with the provided parameters.
 
 ```python
 mtcars = pd.read_csv('mtcars.csv')
@@ -26,8 +25,7 @@ for x, y, s in zip(xs, ys, labels):
 ```
 ![alt tag](https://raw.github.com/Phlya/adjustText/master/examples/mtcars_before.png)
 ```python
-adjust_text(xs, ys, texts, arrowprops=dict(arrowstyle="-", color='k', lw=0.5),
-            bbox={'pad':0, 'alpha':0}, size=7)
+adjust_text(xs, ys, texts, arrowprops=dict(arrowstyle="-", color='k', lw=0.5))
 plt.show()
 ```
 ![alt tag](https://raw.github.com/Phlya/adjustText/master/examples/mtcars_after.png)
