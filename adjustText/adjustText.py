@@ -196,46 +196,13 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
             texts[i].set_position((newx, newy))
         return texts
 
-def pull_text_to_respective_points(x, y, texts, renderer=None, ax=None,
-                                   fraction=0.1, expand=(1.2, 1.2)):
-    """
-    Probably is never useful.
-    """
-    if ax is None:
-        ax = plt.gca()
-    if renderer is None:
-        r = ax.get_figure().canvas.get_renderer()
-    else:
-        r = renderer
-    bboxes = [i.get_window_extent(r).expanded(*expand).transformed(plt.gca().\
-                                          transData.inverted()) for i in texts]
-
-    for i, (bbox, xp, yp) in enumerate(zip(bboxes, x, y)):
-        if not bbox.contains(xp, yp):
-            cx, cy = get_midpoint(bbox)
-            dx = cx - xp
-            dy = cy - yp
-            x, y = texts[i].get_position()
-            if dx/x > dy/y:
-                newx = x - dx * fraction
-            else:
-                newx = x
-            if dy/y > dx/x:
-                newy = y - dy * fraction
-            else:
-                newy = y
-            texts[i].set_position((newx, newy))
-    return texts
-
 def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
                 expand_points=(1.2, 1.2), prefer_move = 'xy',
                 force_text=0.5, force_points=1.0, lim=100, precision=0,
-                pullback_fraction=0.0, only_move={},
-                ha = 'center', va = 'center',
-                text_from_text=True,
-                text_from_points=True, save_steps=False, save_prefix='',
-                save_format='png', add_step_numbers=True, draggable=True,
-                *args, **kwargs):
+                only_move={}, ha = 'center', va = 'center',
+                text_from_text=True, text_from_points=True, save_steps=False,
+                save_prefix='', save_format='png', add_step_numbers=True,
+                draggable=True, *args, **kwargs):
     """
     Iteratively adjusts the locations of texts. First moves all texts that are
     outside the axes limits inside. Then in each iteration moves all texts away
@@ -265,9 +232,6 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
         precision (float): up to which sum of all overlaps along both x and y
             to iterate; may need to increase for complicated situations;
             default 0, so no overlaps with anything.
-        pullback_fraction (float): a fraction of distance between each text and
-            its corresponding point to pull the text back to it; probably never
-            useful and should stay 0
         only_move (dict): a dict to restrict movement of texts to only certain
             axis. Valid keys are 'points' and 'text', for each of them valid
             values are 'x', 'y' and 'xy'. This way you can forbid moving texts
