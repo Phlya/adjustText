@@ -10,7 +10,7 @@ def get_bboxes(texts, r, expand):
 def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
     if ax is None:
         ax = plt.gca()
-    if bboxes is None:    
+    if bboxes is None:
         if renderer is None:
             r = ax.get_figure().canvas.get_renderer()
         else:
@@ -30,7 +30,7 @@ def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
             dy = 0
         if y2 + dy > ymax:
             dy = 0
-        
+
         x, y = text.get_position()
         newx = x + dx
         newy = y + dy
@@ -68,19 +68,19 @@ def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
     overlap_directions_x = np.zeros_like(overlaps_x)
     overlap_directions_y = np.zeros_like(overlaps_y)
     inds, cols = np.where(overlaps_x!=0)
-        
+
     for i in range(len(inds)):
         i, j = inds[i], cols[i]
         direction = np.sign(bboxes[i].extents - bboxes[j].extents)[:2]
         overlap_directions_x[i, j] = direction[0]
         overlap_directions_y[i, j] = direction[1]
-        
+
     move_x = overlaps_x*overlap_directions_x
     move_y = overlaps_y*overlap_directions_y
 
     delta_x = move_x.sum(axis=1)-move_x.sum(axis=0)
     delta_y = move_y.sum(axis=1)-move_y.sum(axis=0)
-    
+
     q = np.sum(np.abs(delta_x) + np.abs(delta_y))
     if move:
         move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
@@ -97,10 +97,9 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
     Repel texts from all points specified by x and y while expanding their
     (texts'!) bounding boxes by expandby  (x, y), e.g. (1.2, 1.2)
     would multiply both width and height by 1.2. In the case when the text
-    overlaps a point, but there is no definite direction for movement (read,
-    the point is in the very center), moves in random direction by 40% of it's
-    width and/or height depending on prefer_move: 'x' moves along x, 'y' -
-    along 'y', 'xy' - along both.
+    overlaps a point, but there is no definite direction for movement, moves
+    in random direction by 40% of it's width and/or height depending on
+    prefer_move: 'x' moves along x, 'y' - along 'y', 'xy' - along both.
     Requires a renderer to get the actual sizes of the text, and to that end
     either one needs to be directly provided, or the axes have to be specified,
     and the renderer is then got from the axes object.
@@ -113,7 +112,7 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
     else:
         r = renderer
     bboxes = get_bboxes(texts, r, expand)
-    
+
     move_x = np.zeros((len(bboxes), len(x)))
     move_y = np.zeros((len(bboxes), len(x)))
     for i, bbox in enumerate(bboxes):
@@ -130,14 +129,14 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
                     dx = xp - bbox.xmin
                 else:
                     dx = 0
-                
+
                 if dir_y == -1:
                     dy = yp - bbox.ymax
                 elif dir_y == 1:
                     dy = yp - bbox.ymin
                 else:
                     dy = 0
-                
+
                 if dx == 0 and dy == 0:
                     if 'x' in prefer_move:
                         dx = bbox.width*0.4*np.random.choice([-1, 1])
@@ -146,10 +145,10 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
 
                 move_x[i, j] = dx
                 move_y[i, j] = dy
-    
+
     delta_x = move_x.sum(axis=1)
     delta_y = move_y.sum(axis=1)
-               
+
     q = np.sum(np.abs(delta_x) + np.abs(delta_y))
     if move:
         move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
@@ -220,8 +219,8 @@ def pull_text_to_respective_points(x, y, texts, renderer=None, ax=None,
     return texts
 
 def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
-                expand_points=(1.2, 1.2), prefer_move = 'xy', 
-                force_text=0.5, force_points=1.0, lim=100, precision=0.1,
+                expand_points=(1.2, 1.2), prefer_move = 'xy',
+                force_text=0.5, force_points=1.0, lim=100, precision=0,
                 pullback_fraction=0.0, only_move={},
                 ha = 'center', va = 'center',
                 text_from_text=True,
@@ -229,11 +228,11 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
                 save_format='png', add_step_numbers=True, draggable=True,
                 *args, **kwargs):
     """
-    Iteratively adjusts the locations of texts. In each iteration first moves
-    all texts away from each other, then all texts away from points. In the end
-    hides texts and substitutes them with annotations to link them to the
-    rescpective points.
-    
+    Iteratively adjusts the locations of texts. First moves all texts that are
+    outside the axes limits inside. Then in each iteration moves all texts away
+    from each other and from points. In the end hides texts and substitutes
+    them with annotations to link them to the rescpective points.
+
     Args:
         x (seq): x-coordinates of labelled points
         y (seq): y-coordinates of labelled points
@@ -255,10 +254,17 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
             value; default 1.0
         lim (int): limit of number of iterations
         precision (float): up to which sum of all overlaps along both x and y
-            to iterate
+            to iterate; may need to increase for complicated situations;
+            default 0, so no overlaps with anything.
         pullback_fraction (float): a fraction of distance between each text and
             its corresponding point to pull the text back to it; probably never
             useful and should stay 0
+        only_move (dict): a dict to restrict movement of texts to only certain
+            axis. Valid keys are 'points' and 'text', for each of them valid
+            values are 'x', 'y' and 'xy'. This way you can forbid moving texts
+            along either of the axes due to overlaps with points, but let it
+            happen if there is an overlap with texts: only_move={'points':'y',
+            'text':'xy'}. Default: None, so everything is allowed.
         ha (str): horizontal alignment of the texts ("left", "center" or
             "right"). Has a strong effect in the very first cycle; default
             "center"
@@ -326,7 +332,7 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
         q = np.array([q1, q2])[np.array([q1, q2])<np.inf]
         if i>=5 and np.all(q <= precision):
             break
-        
+
     for j, text in enumerate(texts):
         a = ax.annotate(text.get_text(), xy = (x[j], y[j]),
                     xytext=text.get_position(),
@@ -334,7 +340,7 @@ def adjust_text(x, y, texts, ax=None, expand_text = (1.2, 1.2),
                     verticalalignment=va, *args, **kwargs)
         if draggable:
             a.draggable()
-        texts[j].set_visible(False)
+        texts[j].remove()
     if save_steps:
         if add_step_numbers:
             plt.title(i+1)
