@@ -91,6 +91,28 @@ def get_midpoint(bbox):
     cy = (bbox.y0+bbox.y1)/2
     return cx, cy
 
+def overlap_bbox_and_point(bbox, xp, yp):
+    cx, cy = get_midpoint(bbox)
+
+    dir_x = np.sign(round(cx-xp, 3))
+    dir_y = np.sign(round(cy-yp, 3))
+
+    if dir_x == -1:
+        dx = xp - bbox.xmax
+    elif dir_x == 1:
+        dx = xp - bbox.xmin
+    else:
+        dx = 0
+
+    if dir_y == -1:
+        dy = yp - bbox.ymax
+    elif dir_y == 1:
+        dy = yp - bbox.ymin
+    else:
+        dy = 0
+
+    return dx, dy
+
 def repel_text_from_points(x, y, texts, renderer=None, ax=None,
                            prefer_move='y', expand=(1.2, 1.2), move=False):
     """
@@ -116,35 +138,22 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
     move_x = np.zeros((len(bboxes), len(x)))
     move_y = np.zeros((len(bboxes), len(x)))
     for i, bbox in enumerate(bboxes):
-        for j, (xp, yp) in enumerate(zip(x, y)):
-            if bbox.contains(xp, yp):
-                cx, cy = get_midpoint(bbox)
+        x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
+        x_in = np.logical_and(x>=x1, x<=x2)
+        y_in = np.logical_and(y>=y1, y<=y2)
+        xy_in = np.where(x_in * y_in)[0]
+        for j in xy_in:
+            xp, yp = x[j], y[j]
+            dx, dy = overlap_bbox_and_point(bbox, xp, yp)
 
-                dir_x = np.sign(round(cx-xp, 3))
-                dir_y = np.sign(round(cy-yp, 3))
+            if dx == 0 and dy == 0:
+                if 'x' in prefer_move:
+                    dx = bbox.width*0.4*np.random.choice([-1, 1])
+                if 'y' in prefer_move:
+                    dy = bbox.height*0.4*np.random.choice([-1, 1])
 
-                if dir_x == -1:
-                    dx = xp - bbox.xmax
-                elif dir_x == 1:
-                    dx = xp - bbox.xmin
-                else:
-                    dx = 0
-
-                if dir_y == -1:
-                    dy = yp - bbox.ymax
-                elif dir_y == 1:
-                    dy = yp - bbox.ymin
-                else:
-                    dy = 0
-
-                if dx == 0 and dy == 0:
-                    if 'x' in prefer_move:
-                        dx = bbox.width*0.4*np.random.choice([-1, 1])
-                    if 'y' in prefer_move:
-                        dy = bbox.height*0.4*np.random.choice([-1, 1])
-
-                move_x[i, j] = dx
-                move_y[i, j] = dy
+            move_x[i, j] = dx
+            move_y[i, j] = dy
 
     delta_x = move_x.sum(axis=1)
     delta_y = move_y.sum(axis=1)
