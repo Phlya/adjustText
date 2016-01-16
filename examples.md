@@ -81,7 +81,7 @@ We can't read some names of the genes on the left, the ones that are downregulat
 ```python
 np.random.seed(2016)
 adjust_text(data['log2FoldChange'], -np.log10(data['pvalue']), texts,
-            arrowprops=dict(arrowstyle="-", color='k', lw=0.5), bbox={'pad':0, 'alpha':0}, size=8)
+            arrowprops=dict(arrowstyle="-", color='k', lw=0.5))
 plt.show()
 ```
 ![alt tag](https://raw.github.com/Phlya/adjustText/master/examples/volcano_after.png)
