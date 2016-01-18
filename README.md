@@ -11,4 +11,4 @@ Should be installable from pipy!
 pip install adjustText
 ```
 
-[here]: https://github.com/Phlya/adjustText/blob/master/examples/examples.ipynb
+[here]: https://github.com/Phlya/adjustText/blob/master/examples/Examples.ipynb
