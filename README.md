@@ -11,26 +11,4 @@ Should be installable from pipy!
 pip install adjustText
 ```
 
-
-```python
-mtcars = pd.read_csv('mtcars.csv')
-labels = mtcars['Car']
-xs, ys = mtcars['wt'], mtcars['mpg']
-plt.scatter(xs, ys, s=15, c='r', edgecolors=(1,1,1,0))
-texts = []
-for x, y, s in zip(xs, ys, labels):
-    texts.append(plt.text(x, y, s, bbox={'pad':0, 'alpha':0}, size=7))
-
-#plt.show()
-```
-![alt tag](https://raw.github.com/Phlya/adjustText/master/examples/mtcars_before.png)
-```python
-adjust_text(xs, ys, texts, arrowprops=dict(arrowstyle="-", color='k', lw=0.5))
-plt.show()
-```
-![alt tag](https://raw.github.com/Phlya/adjustText/master/examples/mtcars_after.png)
-
-The process can be illustrated by the following animation:
-![alt tag](https://raw.github.com/Phlya/adjustText/master/examples/animation.gif)
-
-[here]: https://github.com/Phlya/adjustText/blob/master/examples.md
+[here]: https://github.com/Phlya/adjustText/blob/master/examples/examples.ipynb
