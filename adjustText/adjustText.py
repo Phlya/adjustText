@@ -1,7 +1,11 @@
 from __future__ import division
+import sys
 from matplotlib import pyplot as plt
 from itertools import product
 import numpy as np
+
+if sys.version_info >= (3, 0):
+    xrange = range
 
 def get_bboxes(texts, r, expand, ax=None):
     if ax is None:
@@ -291,7 +295,7 @@ def adjust_text(x, y, texts, ax=None, expand_text=(1.2, 1.2),
     """
     if ax is None:
         ax = plt.gca()
-        r = ax.get_figure().canvas.get_renderer()
+    r = ax.get_figure().canvas.get_renderer()
     orig_xy = [text.get_position() for text in texts]
     orig_x = [xy[0] for xy in orig_xy]
     orig_y = [xy[1] for xy in orig_xy]
