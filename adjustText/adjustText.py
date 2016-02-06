@@ -235,7 +235,7 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
             texts[i].set_position((newx, newy))
     return texts
 
-def adjust_text(x, y, texts, ax=None, expand_text=(1.2, 1.2),
+def adjust_text(texts, x=None, y=None, ax=None, expand_text=(1.2, 1.2),
                 expand_points=(1.2, 1.2), autoalign=True,  va='center',
                 ha='center', force_text=1., force_points=1.,
                 lim=100, precision=0, only_move={}, text_from_text=True,
@@ -249,9 +249,11 @@ def adjust_text(x, y, texts, ax=None, expand_text=(1.2, 1.2),
     them with annotations to link them to the rescpective points.
 
     Args:
-        x (seq): x-coordinates of labelled points
-        y (seq): y-coordinates of labelled points
         texts (list): a list of text.Text objects to adjust
+        x (seq): x-coordinates of points to repel from; if not provided only
+            uses text coordinates
+        y (seq): y-coordinates of points to repel from; if not provided only
+            uses text coordinates
         ax (obj): axes object with the plot; if not provided is determined by
             plt.gca()
         expand_text (seq): a tuple/list/... with 2 numbers (x, y) to expand
@@ -299,6 +301,13 @@ def adjust_text(x, y, texts, ax=None, expand_text=(1.2, 1.2),
     orig_xy = [text.get_position() for text in texts]
     orig_x = [xy[0] for xy in orig_xy]
     orig_y = [xy[1] for xy in orig_xy]
+    if x is None:
+        if y is None:
+            x, y = orig_x, orig_y
+        else:
+            raise ValueError('Please specify both x and y, or neither')
+    if y is None:
+        raise ValueError('Please specify both x and y, or neither')
     for text in texts:
         text.set_va(va)
         text.set_ha(ha)
