@@ -359,7 +359,6 @@ def adjust_text(texts, x=None, y=None, ax=None, expand_text=(1.2, 1.2),
         dx = np.array(d_x_text) + np.array(d_x_points)
         dy = np.array(d_y_text) + np.array(d_y_points)
         q = round(q1+q2, 5)
-        print(i, q)
         if q > precision and q < np.max(history):
             history.pop(0)
             history.append(q)
