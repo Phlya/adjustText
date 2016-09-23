@@ -236,7 +236,7 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
     return texts
 
 def adjust_text(texts, x=None, y=None, ax=None, expand_text=(1.2, 1.2),
-                expand_points=(1.2, 1.2), autoalign=True,  va='center',
+                expand_points=(1.2, 1.2), autoalign='xy',  va='center',
                 ha='center', force_text=1., force_points=1.,
                 lim=100, precision=0, only_move={}, text_from_text=True,
                 text_from_points=True, save_steps=False, save_prefix='',
@@ -260,10 +260,10 @@ def adjust_text(texts, x=None, y=None, ax=None, expand_text=(1.2, 1.2),
             texts when repelling them from each other; default (1.2, 1.2)
         expand_points (seq): a tuple/list/... with 2 numbers (x, y) to expand
             texts when repelling them from points; default (1.2, 1.2)
-        autoalign (bool): If True, the best alignment of all texts will be
-            determined automatically before running the iterative adjustment;
-            if 'x' will only align horizontally, if 'y' - vertically; overrides
-            va and ha
+        autoalign: If 'xy', the best alignment of all texts will be
+            determined in all directions automatically before running the
+            iterative adjustment; if 'x' will only align horizontally, if 'y' -
+            vertically; overrides va and ha
         va (str): vertical alignment of texts
         ha (str): horizontal alignment of texts
         force_text (float): the repel force from texts is multiplied by this
@@ -344,7 +344,7 @@ def adjust_text(texts, x=None, y=None, ax=None, expand_text=(1.2, 1.2),
                                                    ax=ax, renderer=r,
                                                    expand=expand_points)
         else:
-            d_x_points, d_y_points, q1 = [0]*len(texts), [0]*len(texts), 0
+            d_x_points, d_y_points, q2 = [0]*len(texts), [0]*len(texts), 0
         if only_move:
             if 'text' in only_move:
                 if 'x' not in only_move['text']:
@@ -358,7 +358,8 @@ def adjust_text(texts, x=None, y=None, ax=None, expand_text=(1.2, 1.2),
                     d_y_points = np.zeros_like(d_y_points)
         dx = np.array(d_x_text) + np.array(d_x_points)
         dy = np.array(d_y_text) + np.array(d_y_points)
-        q = round(np.sum(np.array([q1, q2])[np.array([q1, q2])<np.inf]), 5)
+        q = round(q1+q2, 5)
+        print(i, q)
         if q > precision and q < np.max(history):
             history.pop(0)
             history.append(q)
@@ -367,8 +368,8 @@ def adjust_text(texts, x=None, y=None, ax=None, expand_text=(1.2, 1.2),
             if save_steps:
                 if add_step_numbers:
                     plt.title(i+1)
-                    plt.savefig(save_prefix+str(i+1)+'.'+save_format,
-                                format=save_format)
+                plt.savefig(save_prefix+str(i+1)+'.'+save_format,
+                            format=save_format)
         else:
             break
 
