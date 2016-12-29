@@ -73,7 +73,8 @@ def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
         newy = y + dy
         text.set_position((newx, newy))
 
-def optimally_align_text(x, y, texts, expand, add_bboxes=[], renderer=None, ax=None,
+def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
+                         renderer=None, ax=None,
                          direction='xy'):
     """
     For all text objects find alignment that causes the least overlap with
@@ -182,11 +183,6 @@ def repel_text_from_bboxes(add_bboxes, texts, renderer=None, ax=None,
     else:
         r = renderer
 
-#    xmins = [abbox.xmin for abbox in add_bboxes]
-#    xmaxs = [abbox.xmax for abbox in add_bboxes]
-#    ymaxs = [abbox.ymax for abbox in add_bboxes]
-#    ymins = [abbox.ymin for abbox in add_bboxes]
-
     bboxes = get_bboxes(texts, r, expand)
 
     overlaps_x = np.zeros((len(bboxes), len(add_bboxes)))
@@ -289,7 +285,7 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
 
 def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                 expand_text=(1.2, 1.2), expand_points=(1.2, 1.2),
-                expand_objects=(1.2, 1.2),
+                expand_objects=(1.2, 1.2), expand_align=(1., 1.),
                 autoalign='xy',  va='center', ha='center',
                 force_text=1., force_points=1., force_objects=1.,
                 lim=100, precision=0,
@@ -319,6 +315,8 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
             texts when repelling them from points; default (1.2, 1.2)
         expand_objects (seq): a tuple/list/... with 2 numbers (x, y) to expand
             texts when repelling them from points; default (1.2, 1.2)
+        expand_align (seq): a tuple/list/... with 2 numbers (x, y) to expand
+            texts when autoaligning texts; default (1., 1.)
         autoalign: If 'xy', the best alignment of all texts will be
             determined in all directions automatically before running the
             iterative adjustment; if 'x' will only align horizontally, if 'y' -
@@ -389,14 +387,15 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         plt.savefig(save_prefix+'0a.'+save_format, format=save_format)
     if autoalign:
         if autoalign is not True:
-            texts = optimally_align_text(x, y, texts, add_bboxes=add_bboxes,
-                                         direction=autoalign,
-                                         expand=expand_points, renderer=r,
+            texts = optimally_align_text(x, y, texts, expand=expand_align,
+                                         add_bboxes=add_bboxes,
+                                         direction=autoalign, renderer=r,
                                          ax=ax)
         else:
             texts = optimally_align_text(orig_x, orig_y, texts,
-                                         add_bboxes=add_bboxes,
-                                         expand=expand_points, renderer=r,
+                                         expand=expand_align,
+                                         direction='xy',
+                                         add_bboxes=add_bboxes, renderer=r,
                                          ax=ax)
 
     if save_steps:
