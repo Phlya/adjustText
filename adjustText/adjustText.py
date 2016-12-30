@@ -3,6 +3,7 @@ import sys
 from matplotlib import pyplot as plt
 from itertools import product
 import numpy as np
+from operator import itemgetter
 
 if sys.version_info >= (3, 0):
     xrange = range
@@ -105,9 +106,13 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
                 text.set_va(v)
             bbox = text.get_window_extent(r).expanded(*expand).\
                                        transformed(ax.transData.inverted())
-            c = get_points_inside_bbox(x, y, bbox)
-            counts.append(len(c) + bbox.count_overlaps(bboxes+add_bboxes)-1)
-        a = np.argmin(counts)
+            c = len(get_points_inside_bbox(x, y, bbox))
+            intersections = [bbox.intersection(bbox, bbox2) for bbox2 in
+                             bboxes+add_bboxes]
+            intersections = sum([abs(b.width*b.height) if b is not None else 0
+                                 for b in intersections])
+            counts.append((c, intersections))
+        a, value = min(enumerate(counts), key=itemgetter(1))
         if 'x' in direction:
             text.set_ha(alignment[a][0])
         if 'y' in direction:
@@ -424,7 +429,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
             d_x_objects, d_y_objects, q3 = repel_text_from_bboxes(add_bboxes,
                                                                   texts,
                                                              ax=ax, renderer=r,
-                                                          expand=expand_objects)
+                                                         expand=expand_objects)
         else:
             d_x_objects, d_y_objects, q3 = [0]*len(texts), [0]*len(texts), 0
 
