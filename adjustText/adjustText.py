@@ -87,11 +87,13 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
         r = ax.get_figure().canvas.get_renderer()
     else:
         r = renderer
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
     bboxes = get_bboxes(texts, r, expand)
     if 'x' not in direction:
         ha = ['']
     else:
-        ha = ['left', 'right', 'center']
+        ha = ['center', 'left', 'right']
     if 'y' not in direction:
         va = ['']
     else:
@@ -111,7 +113,14 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
                              bboxes+add_bboxes]
             intersections = sum([abs(b.width*b.height) if b is not None else 0
                                  for b in intersections])
-            counts.append((c, intersections))
+            # Check for out-of-axes position
+            bbox = text.get_window_extent(r).transformed(ax.transData.inverted())
+            x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
+            if x1 < xmin or x2 > xmax or y1 < ymin or y2 > ymax:
+                axout = 1
+            else:
+                axout = 0
+            counts.append((axout, c, intersections))
         a, value = min(enumerate(counts), key=itemgetter(1))
         if 'x' in direction:
             text.set_ha(alignment[a][0])
@@ -290,7 +299,7 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
 
 def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                 expand_text=(1.2, 1.2), expand_points=(1.2, 1.2),
-                expand_objects=(1.2, 1.2), expand_align=(1., 1.),
+                expand_objects=(1.2, 1.2), expand_align=(0.9, 0.9),
                 autoalign='xy',  va='center', ha='center',
                 force_text=0.5, force_points=0.5, force_objects=0.5,
                 lim=100, precision=0,
