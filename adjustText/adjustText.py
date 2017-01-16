@@ -19,19 +19,17 @@ def get_midpoint(bbox):
     cy = (bbox.y0+bbox.y1)/2
     return cx, cy
 
-def find_renderer(fig):
-    if hasattr(fig.canvas, "get_renderer"):
-        renderer = fig.canvas.get_renderer()
-    else:
-        renderer = fig.canvas.renderer
-
-    return renderer
-
 def get_points_inside_bbox(x, y, bbox):
     x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
     x_in = np.logical_and(x>x1, x<x2)
     y_in = np.logical_and(y>y1, y<y2)
     return np.where(x_in & y_in)[0]
+
+def get_renderer(fig):
+    try: 
+        return fig.canvas.get_renderer()
+    except:
+        return fig.canvas.renderer
 
 def overlap_bbox_and_point(bbox, xp, yp):
     cx, cy = get_midpoint(bbox)
@@ -59,8 +57,7 @@ def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
         ax = plt.gca()
     if bboxes is None:
         if renderer is None:
-            r = find_renderer(ax.get_figure())
-            # r = ax.get_figure().canvas.get_renderer()
+            r = get_renderer(ax.get_figure())
         else:
             r = renderer
         bboxes = get_bboxes(texts, r, (1, 1))
@@ -93,8 +90,7 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
     if ax is None:
         ax = plt.gca()
     if renderer is None:
-        r = find_renderer(ax.get_figure())
-        # r = ax.get_figure().canvas.get_renderer()
+        r = get_renderer(ax.get_figure())
     else:
         r = renderer
     xmin, xmax = ax.get_xlim()
@@ -152,8 +148,7 @@ def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
     if ax is None:
         ax = plt.gca()
     if renderer is None:
-        r = find_renderer(ax.get_figure())
-        # r = ax.get_figure().canvas.get_renderer()
+        r = get_renderer(ax.get_figure())
     else:
         r = renderer
     bboxes = get_bboxes(texts, r, expand)
@@ -204,8 +199,7 @@ def repel_text_from_bboxes(add_bboxes, texts, renderer=None, ax=None,
     if ax is None:
         ax = plt.gca()
     if renderer is None:
-        r = find_renderer(ax.get_figure())
-        # r = ax.get_figure().canvas.get_renderer()
+        r = get_renderer(ax.get_figure())
     else:
         r = renderer
 
@@ -255,8 +249,7 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
     if ax is None:
         ax = plt.gca()
     if renderer is None:
-        r = find_renderer(ax.get_figure())
-        # r = ax.get_figure().canvas.get_renderer()
+        r = get_renderer(ax.get_figure())
     else:
         r = renderer
     bboxes = get_bboxes(texts, r, expand)
@@ -284,8 +277,7 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
     if ax is None:
         ax = plt.gca()
     if renderer is None:
-        r = find_renderer(ax.get_figure())
-        # r = ax.get_figure().canvas.get_renderer()
+        r = get_renderer(ax.get_figure())
     else:
         r = renderer
     if expand is None:
@@ -384,8 +376,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
     """
     if ax is None:
         ax = plt.gca()
-    r = find_renderer(ax.get_figure())
-    # r = ax.get_figure().canvas.get_renderer()
+    r = get_renderer(ax.get_figure())
     orig_xy = [text.get_position() for text in texts]
     orig_x = [xy[0] for xy in orig_xy]
     orig_y = [xy[1] for xy in orig_xy]
