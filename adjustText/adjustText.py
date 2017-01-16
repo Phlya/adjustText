@@ -28,7 +28,7 @@ def get_points_inside_bbox(x, y, bbox):
 def get_renderer(fig):
     try: 
         return fig.canvas.get_renderer()
-    except:
+    except AttributeError:
         return fig.canvas.renderer
 
 def overlap_bbox_and_point(bbox, xp, yp):
