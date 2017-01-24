@@ -99,7 +99,11 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
     else:
         va = ['bottom', 'top', 'center']
     alignment = list(product(ha, va))
+#    coords = np.array(zip(x, y))
     for i, text in enumerate(texts):
+#        tcoords = np.array(text.get_position()).T
+#        nonself_coords = coords[~np.all(coords==tcoords, axis=1)]
+#        nonself_x, nonself_y = np.split(nonself_coords, 2, axis=1)
         counts = []
         for h, v in alignment:
             if h:
@@ -232,9 +236,7 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
     """
     Repel texts from all points specified by x and y while expanding their
     (texts'!) bounding boxes by expandby  (x, y), e.g. (1.2, 1.2)
-    would multiply both width and height by 1.2. In the case when the text
-    overlaps a point, but there is no definite direction for movement, moves
-    in random direction by 40% of it's width and/or height depending on
+    would multiply both width and height by 1.2.
     Requires a renderer to get the actual sizes of the text, and to that end
     either one needs to be directly provided, or the axes have to be specified,
     and the renderer is then got from the axes object.
