@@ -8,6 +8,12 @@ from operator import itemgetter
 if sys.version_info >= (3, 0):
     xrange = range
 
+def get_text_position(text, ax=None):
+    ax = ax or plt.gca()
+    x, y = text.get_position()
+    return (ax.xaxis.convert_units(x),
+            ax.yaxis.convert_units(y))
+
 def get_bboxes(objs, r, expand=(1.0, 1.0), ax=None):
     if ax is None:
         ax = plt.gca()
@@ -26,7 +32,7 @@ def get_points_inside_bbox(x, y, bbox):
     return np.where(x_in & y_in)[0]
 
 def get_renderer(fig):
-    try: 
+    try:
         return fig.canvas.get_renderer()
     except AttributeError:
         return fig.canvas.renderer
@@ -75,7 +81,7 @@ def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
         if y2 + dy > ymax:
             dy = 0
 
-        x, y = text.get_position()
+        x, y = get_text_position(text)
         newx = x + dx
         newy = y + dy
         text.set_position((newx, newy))
@@ -298,7 +304,7 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
         if y2 > ymax:
             dy = ymax - y2
         if dx or dy:
-            x, y = texts[i].get_position()
+            x, y = get_text_position(texts[i])
             newx, newy = x + dx, y + dy
             texts[i].set_position((newx, newy))
     return texts
@@ -377,7 +383,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
     if ax is None:
         ax = plt.gca()
     r = get_renderer(ax.get_figure())
-    orig_xy = [text.get_position() for text in texts]
+    orig_xy = [get_text_position(text) for text in texts]
     orig_x = [xy[0] for xy in orig_xy]
     orig_y = [xy[1] for xy in orig_xy]
     if x is None:
