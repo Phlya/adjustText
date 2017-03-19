@@ -26,7 +26,7 @@ def get_points_inside_bbox(x, y, bbox):
     return np.where(x_in & y_in)[0]
 
 def get_renderer(fig):
-    try: 
+    try:
         return fig.canvas.get_renderer()
     except AttributeError:
         return fig.canvas.renderer
@@ -305,6 +305,15 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
             texts[i].set_position((newx, newy))
     return texts
 
+def float_to_tuple(a):
+    try:
+        a = float(a)
+        return (a, a)
+    except TypeError:
+        assert len(a)==2
+        assert all([bool(i) for i in a])
+        return a
+
 def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                 expand_text=(1.2, 1.2), expand_points=(1.2, 1.2),
                 expand_objects=(1.2, 1.2), expand_align=(0.9, 0.9),
@@ -382,6 +391,9 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
     orig_xy = [text.get_position() for text in texts]
     orig_x = [xy[0] for xy in orig_xy]
     orig_y = [xy[1] for xy in orig_xy]
+    force_objects = float_to_tuple(force_objects)
+    force_text = float_to_tuple(force_text)
+    force_points = float_to_tuple(force_points)
     if x is None:
         if y is None:
             x, y = orig_x, orig_y
@@ -466,12 +478,12 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                     d_x_objects = np.zeros_like(d_x_objects)
                 if 'y' not in only_move['objects']:
                     d_y_objects = np.zeros_like(d_y_objects)
-        dx = (np.array(d_x_text) * force_text +
-              np.array(d_x_points) * force_points +
-              np.array(d_x_objects) * force_objects)
-        dy = (np.array(d_y_text) * force_text +
-              np.array(d_y_points) * force_points +
-              np.array(d_y_objects) * force_objects)
+        dx = (np.array(d_x_text) * force_text[0] +
+              np.array(d_x_points) * force_points[0] +
+              np.array(d_x_objects) * force_objects[0])
+        dy = (np.array(d_y_text) * force_text[1] +
+              np.array(d_y_points) * force_points[1] +
+              np.array(d_y_objects) * force_objects[1])
         q = round(q1+q2+q3, 5)
         if q > precision and q < np.max(history):
             history.pop(0)
