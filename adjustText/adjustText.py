@@ -8,6 +8,12 @@ from operator import itemgetter
 if sys.version_info >= (3, 0):
     xrange = range
 
+def get_text_position(text, ax=None):
+    ax = ax or plt.gca()
+    x, y = text.get_position()
+    return (ax.xaxis.convert_units(x),
+            ax.yaxis.convert_units(y))
+
 def get_bboxes(objs, r, expand=(1.0, 1.0), ax=None):
     if ax is None:
         ax = plt.gca()
@@ -60,7 +66,7 @@ def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
             r = get_renderer(ax.get_figure())
         else:
             r = renderer
-        bboxes = get_bboxes(texts, r, (1, 1))
+        bboxes = get_bboxes(texts, r, (1, 1), ax=ax)
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
     for i, (text, dx, dy) in enumerate(zip(texts, delta_x, delta_y)):
@@ -75,7 +81,7 @@ def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
         if y2 + dy > ymax:
             dy = 0
 
-        x, y = text.get_position()
+        x, y = get_text_position(text, ax=ax)
         newx = x + dx
         newy = y + dy
         text.set_position((newx, newy))
@@ -95,7 +101,7 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
         r = renderer
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
-    bboxes = get_bboxes(texts, r, expand)
+    bboxes = get_bboxes(texts, r, expand, ax=ax)
     if 'x' not in direction:
         ha = ['']
     else:
@@ -155,7 +161,7 @@ def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
         r = get_renderer(ax.get_figure())
     else:
         r = renderer
-    bboxes = get_bboxes(texts, r, expand)
+    bboxes = get_bboxes(texts, r, expand, ax=ax)
     xmins = [bbox.xmin for bbox in bboxes]
     xmaxs = [bbox.xmax for bbox in bboxes]
     ymaxs = [bbox.ymax for bbox in bboxes]
@@ -207,7 +213,7 @@ def repel_text_from_bboxes(add_bboxes, texts, renderer=None, ax=None,
     else:
         r = renderer
 
-    bboxes = get_bboxes(texts, r, expand)
+    bboxes = get_bboxes(texts, r, expand, ax=ax)
 
     overlaps_x = np.zeros((len(bboxes), len(add_bboxes)))
     overlaps_y = np.zeros_like(overlaps_x)
@@ -254,7 +260,7 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
         r = get_renderer(ax.get_figure())
     else:
         r = renderer
-    bboxes = get_bboxes(texts, r, expand)
+    bboxes = get_bboxes(texts, r, expand, ax=ax)
 
     move_x = np.zeros((len(bboxes), len(x)))
     move_y = np.zeros((len(bboxes), len(x)))
@@ -285,7 +291,7 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
     if expand is None:
         expand = (1, 1)
     if bboxes is None:
-        bboxes = get_bboxes(texts, r, expand=expand)
+        bboxes = get_bboxes(texts, r, expand=expand, ax=ax)
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
     for i, bbox in enumerate(bboxes):
@@ -300,7 +306,7 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
         if y2 > ymax:
             dy = ymax - y2
         if dx or dy:
-            x, y = texts[i].get_position()
+            x, y = get_text_position(texts[i], ax=ax)
             newx, newy = x + dx, y + dy
             texts[i].set_position((newx, newy))
     return texts
@@ -388,7 +394,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
     if ax is None:
         ax = plt.gca()
     r = get_renderer(ax.get_figure())
-    orig_xy = [text.get_position() for text in texts]
+    orig_xy = [get_text_position(text, ax=ax) for text in texts]
     orig_x = [xy[0] for xy in orig_xy]
     orig_y = [xy[1] for xy in orig_xy]
     force_objects = float_to_tuple(force_objects)
@@ -406,7 +412,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         add_bboxes = []
     else:
         try:
-            add_bboxes = get_bboxes(add_objects, r)
+            add_bboxes = get_bboxes(add_objects, r, ax=ax)
         except:
             raise ValueError("Can't get bounding boxes from add_objects - is'\
                              it a flat list of matplotlib objects?")
