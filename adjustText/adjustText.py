@@ -347,11 +347,14 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         ax (obj): axes object with the plot; if not provided is determined by
             plt.gca()
         expand_text (seq): a tuple/list/... with 2 numbers (x, y) to expand
-            texts when repelling them from each other; default (1.2, 1.2)
+            the bounding box of texts when repelling them from each other;
+            default (1.2, 1.2)
         expand_points (seq): a tuple/list/... with 2 numbers (x, y) to expand
-            texts when repelling them from points; default (1.2, 1.2)
+            the bounding box of texts when repelling them from points;
+            default (1.2, 1.2)
         expand_objects (seq): a tuple/list/... with 2 numbers (x, y) to expand
-            texts when repelling them from points; default (1.2, 1.2)
+            the bounding box of texts when repelling them from other objects;
+            default (1.2, 1.2)
         expand_align (seq): a tuple/list/... with 2 numbers (x, y) to expand
             texts when autoaligning texts; default (1., 1.)
         autoalign: If 'xy', the best alignment of all texts will be
