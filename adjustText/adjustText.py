@@ -506,7 +506,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
             history.pop(0)
             history.append(q)
             move_texts(texts, dx, dy,
-                       bboxes = get_bboxes(texts, r, (1, 1)), ax=ax)
+                       bboxes = get_bboxes(texts, r, (1, 1), ax), ax=ax)
             if save_steps:
                 if add_step_numbers:
                     plt.title(i+1)
