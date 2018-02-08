@@ -329,6 +329,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                 only_move={}, text_from_text=True, text_from_points=True,
                 save_steps=False, save_prefix='', save_format='png',
                 add_step_numbers=True, draggable=True, on_basemap=False,
+                force_text_x=None,force_text_y=None,
                 *args, **kwargs):
     """
     Iteratively adjusts the locations of texts. First moves all texts that are
@@ -365,6 +366,12 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         ha (str): horizontal alignment of texts
         force_text (float): the repel force from texts is multiplied by this
             value; default 0.5
+        force_text_x (float): the repel force in X axis direction from texts is 
+            multiplied by this value; when None, value of force_text will be used 
+            instead; default None
+        force_text_y (float): the repel force in Y axis direction from texts is 
+            multiplied by this value; when None, value of force_text will be used 
+            instead; default None
         force_points (float): the repel force from points is multiplied by this
             value; default 0.5
         force_objects (float): same as other forces, but for repelling
@@ -495,12 +502,24 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                     d_x_objects = np.zeros_like(d_x_objects)
                 if 'y' not in only_move['objects']:
                     d_y_objects = np.zeros_like(d_y_objects)
-        dx = (np.array(d_x_text) * force_text[0] +
-              np.array(d_x_points) * force_points[0] +
-              np.array(d_x_objects) * force_objects[0])
-        dy = (np.array(d_y_text) * force_text[1] +
-              np.array(d_y_points) * force_points[1] +
-              np.array(d_y_objects) * force_objects[1])
+        if force_text_x is None:
+            dx = (np.array(d_x_text) * force_text[0] +
+                  np.array(d_x_points) * force_points[0] +
+                  np.array(d_x_objects) * force_objects[0])
+        else:
+            dx = (np.array(d_x_text) * force_text_x +
+                  np.array(d_x_points) * force_points[0] +
+                  np.array(d_x_objects) * force_objects[0])
+            
+        if force_text_y is None:    
+            dy = (np.array(d_y_text) * force_text[1] +
+                  np.array(d_y_points) * force_points[1] +
+                  np.array(d_y_objects) * force_objects[1])
+        else:
+            dy = (np.array(d_y_text) * force_text_y +
+                  np.array(d_y_points) * force_points[1] +
+                  np.array(d_y_objects) * force_objects[1])
+                  
         q = round(q1+q2+q3, 5)
         if q > precision and q < np.max(history):
             history.pop(0)
