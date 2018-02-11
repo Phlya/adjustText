@@ -317,8 +317,11 @@ def float_to_tuple(a):
         return (a, a)
     except TypeError:
         assert len(a)==2
-        assert all([bool(i) for i in a])
-        return a
+        try:
+            b = float(a[0]), float(a[1])
+        except TypeError:
+            raise TypeError('Force values must be castable to floats')
+        return b
 
 def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                 expand_text=(1.2, 1.2), expand_points=(1.2, 1.2),
@@ -501,7 +504,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         dy = (np.array(d_y_text) * force_text[1] +
               np.array(d_y_points) * force_points[1] +
               np.array(d_y_objects) * force_objects[1])
-        q = round(q1+q2+q3, 5)
+        q = round(q1+q2+q3, 10)
         if q > precision and q < np.max(history):
             history.pop(0)
             history.append(q)
