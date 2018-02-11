@@ -328,7 +328,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                 lim=100, precision=0,
                 only_move={}, text_from_text=True, text_from_points=True,
                 save_steps=False, save_prefix='', save_format='png',
-                add_step_numbers=True, draggable=True,
+                add_step_numbers=True, draggable=True, on_basemap=False,
                 *args, **kwargs):
     """
     Iteratively adjusts the locations of texts. First moves all texts that are
@@ -347,11 +347,14 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         ax (obj): axes object with the plot; if not provided is determined by
             plt.gca()
         expand_text (seq): a tuple/list/... with 2 numbers (x, y) to expand
-            texts when repelling them from each other; default (1.2, 1.2)
+            the bounding box of texts when repelling them from each other;
+            default (1.2, 1.2)
         expand_points (seq): a tuple/list/... with 2 numbers (x, y) to expand
-            texts when repelling them from points; default (1.2, 1.2)
+            the bounding box of texts when repelling them from points;
+            default (1.2, 1.2)
         expand_objects (seq): a tuple/list/... with 2 numbers (x, y) to expand
-            texts when repelling them from points; default (1.2, 1.2)
+            the bounding box of texts when repelling them from other objects;
+            default (1.2, 1.2)
         expand_align (seq): a tuple/list/... with 2 numbers (x, y) to expand
             texts when autoaligning texts; default (1., 1.)
         autoalign: If 'xy', the best alignment of all texts will be
@@ -390,6 +393,8 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
             images of saving steps
         draggable (bool): whether to make the annotations draggable; default
             True
+        on_basemap (bool): whether your plot uses the basemap library, stops
+            labels going over the edge of the map; default False
     """
     if ax is None:
         ax = plt.gca()
@@ -425,6 +430,9 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         if add_step_numbers:
             plt.title('0a')
         plt.savefig(save_prefix+'0a.'+save_format, format=save_format)
+    elif on_basemap:
+        ax.draw(r)
+
     if autoalign:
         if autoalign is not True:
             texts = optimally_align_text(x, y, texts, expand=expand_align,
@@ -442,6 +450,9 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         if add_step_numbers:
             plt.title('0b')
         plt.savefig(save_prefix+'0b.'+save_format, format=save_format)
+    elif on_basemap:
+        ax.draw(r)
+
     texts = repel_text_from_axes(texts, ax, renderer=r, expand=expand_points)
     history = [np.inf]*5
     for i in xrange(lim):
@@ -495,12 +506,14 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
             history.pop(0)
             history.append(q)
             move_texts(texts, dx, dy,
-                       bboxes = get_bboxes(texts, r, (1, 1)), ax=ax)
+                       bboxes = get_bboxes(texts, r, (1, 1), ax), ax=ax)
             if save_steps:
                 if add_step_numbers:
                     plt.title(i+1)
                 plt.savefig(save_prefix+str(i+1)+'.'+save_format,
                             format=save_format)
+            elif on_basemap:
+                ax.draw(r)
         else:
             break
 
@@ -515,4 +528,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         if add_step_numbers:
             plt.title(i+1)
         plt.savefig(save_prefix+str(i+1)+'.'+save_format, format=save_format)
+    elif on_basemap:
+        ax.draw(r)
+
     return i+1
