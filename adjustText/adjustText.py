@@ -432,8 +432,9 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         text.set_ha(ha)
     if save_steps:
         if add_step_numbers:
-            plt.title('0a')
-        plt.savefig(save_prefix+'0a.'+save_format, format=save_format)
+            plt.title('Before')
+        plt.savefig('%s%s.%s' % (save_prefix,
+                            '000a', save_format), format=save_format)
     elif on_basemap:
         ax.draw(r)
 
@@ -452,8 +453,9 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
 
     if save_steps:
         if add_step_numbers:
-            plt.title('0b')
-        plt.savefig(save_prefix+'0b.'+save_format, format=save_format)
+            plt.title('Autoaligned')
+        plt.savefig('%s%s.%s' % (save_prefix,
+                            '000b', save_format), format=save_format)
     elif on_basemap:
         ax.draw(r)
 
@@ -514,7 +516,8 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
             if save_steps:
                 if add_step_numbers:
                     plt.title(i+1)
-                plt.savefig(save_prefix+str(i+1)+'.'+save_format,
+                plt.savefig('%s%s.%s' % (save_prefix,
+                            '{0:03}'.format(i+1), save_format),
                             format=save_format)
             elif on_basemap:
                 ax.draw(r)
@@ -531,7 +534,9 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
     if save_steps:
         if add_step_numbers:
             plt.title(i+1)
-        plt.savefig(save_prefix+str(i+1)+'.'+save_format, format=save_format)
+            plt.savefig('%s%s.%s' % (save_prefix,
+                        '{0:03}'.format(i+1), save_format),
+                        format=save_format)
     elif on_basemap:
         ax.draw(r)
 
