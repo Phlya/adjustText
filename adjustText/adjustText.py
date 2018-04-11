@@ -329,8 +329,9 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                 autoalign='xy',  va='center', ha='center',
                 force_text=(0.5, 1), force_points=(0.5, 1),
                 force_objects=(0.5, 1),
-                lim=100, precision=0,
-                only_move={}, text_from_text=True, text_from_points=True,
+                lim=100, precision=0.001,
+                only_move={'points':'xy', 'text':'xy', 'objects':'xy'},
+                text_from_text=True, text_from_points=True,
                 save_steps=False, save_prefix='', save_format='png',
                 add_step_numbers=True, draggable=True, on_basemap=False,
                 *args, **kwargs):
@@ -382,7 +383,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
             values are 'x', 'y' and 'xy'. This way you can forbid moving texts
             along either of the axes due to overlaps with points, but let it
             happen if there is an overlap with texts: only_move={'points':'y',
-            'text':'xy'}. Default: None, so everything is allowed.
+            'text':'xy'}. Default: everything is allowed.
         text_from_text (bool): whether to repel texts from each other; default
             True
         text_from_points (bool): whether to repel texts from points; default
@@ -410,18 +411,21 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
     force_text = float_to_tuple(force_text)
     force_points = float_to_tuple(force_points)
 
-    xdiff = np.diff(ax.get_xlim())[0]
-    ydiff = np.diff(ax.get_ylim())[0]
+#    xdiff = np.diff(ax.get_xlim())[0]
+#    ydiff = np.diff(ax.get_ylim())[0]
 
+    bboxes = get_bboxes(texts, r)
+    sum_width = np.sum(list(map(lambda x: x.width, bboxes)))
+    sum_height = np.sum(list(map(lambda x: x.height, bboxes)))
     if not any(list(map(lambda val: 'x' in val, only_move.values()))):
         precision_x = np.inf
     else:
-        precision_x = precision*xdiff
-
+        precision_x = precision*sum_width
+#
     if not any(list(map(lambda val: 'y' in val, only_move.values()))):
         precision_y = np.inf
     else:
-        precision_y = precision*ydiff
+        precision_y = precision*sum_height
 
     if x is None:
         if y is None:
@@ -522,9 +526,9 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         dy = (np.array(d_y_text) * force_text[1] +
               np.array(d_y_points) * force_points[1] +
               np.array(d_y_objects) * force_objects[1])
-        qx = round(np.sum([i[0] for i in [q1, q2, q3]]), int(-np.log10(xdiff))+1)
-        qy = round(np.sum([i[1] for i in [q1, q2, q3]]), int(-np.log10(ydiff))+1)
-        histm = np.max(np.array(history), axis=0)
+        qx = np.sum([i[0] for i in [q1, q2, q3]])
+        qy = np.sum([i[1] for i in [q1, q2, q3]])
+        histm = np.mean(np.array(history), axis=0)
         if (qx < precision_x and qy < precision_y) or np.all([qx, qy] >= histm):
             break
         else:
