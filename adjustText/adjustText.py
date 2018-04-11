@@ -190,7 +190,7 @@ def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
     delta_x = move_x.sum(axis=1)
     delta_y = move_y.sum(axis=1)
 
-    q = np.sum(np.abs(delta_x) + np.abs(delta_y))
+    q = np.sum(np.abs(delta_x)), np.sum(np.abs(delta_y))
     if move:
         move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
     return delta_x, delta_y, q
@@ -238,7 +238,7 @@ def repel_text_from_bboxes(add_bboxes, texts, renderer=None, ax=None,
     delta_x = move_x.sum(axis=1)
     delta_y = move_y.sum(axis=1)
 
-    q = np.sum(np.abs(delta_x) + np.abs(delta_y))
+    q = np.sum(np.abs(delta_x)), np.sum(np.abs(delta_y))
     if move:
         move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
     return delta_x, delta_y, q
@@ -275,7 +275,7 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
 
     delta_x = move_x.sum(axis=1)
     delta_y = move_y.sum(axis=1)
-    q = np.sum(np.abs(delta_x) + np.abs(delta_y))
+    q = np.sum(np.abs(delta_x)), np.sum(np.abs(delta_y))
     if move:
         move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
     return delta_x, delta_y, q
@@ -409,6 +409,20 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
     force_objects = float_to_tuple(force_objects)
     force_text = float_to_tuple(force_text)
     force_points = float_to_tuple(force_points)
+
+    xdiff = np.diff(ax.get_xlim())[0]
+    ydiff = np.diff(ax.get_ylim())[0]
+
+    if not any(list(map(lambda val: 'x' in val, only_move.values()))):
+        precision_x = np.inf
+    else:
+        precision_x = precision*xdiff
+
+    if not any(list(map(lambda val: 'y' in val, only_move.values()))):
+        precision_y = np.inf
+    else:
+        precision_y = precision*ydiff
+
     if x is None:
         if y is None:
             x, y = orig_x, orig_y
@@ -460,22 +474,22 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         ax.draw(r)
 
     texts = repel_text_from_axes(texts, ax, renderer=r, expand=expand_points)
-    history = [np.inf]*5
+    history = [(np.inf, np.inf)]*10
     for i in xrange(lim):
-        q1, q2 = np.inf, np.inf
+#        q1, q2 = [np.inf, np.inf], [np.inf, np.inf]
 
         if text_from_text:
             d_x_text, d_y_text, q1 = repel_text(texts, renderer=r, ax=ax,
                                                 expand=expand_text)
         else:
-            d_x_text, d_y_text, q1 = [0]*len(texts), [0]*len(texts), 0
+            d_x_text, d_y_text, q1 = [0]*len(texts), [0]*len(texts), (0, 0)
 
         if text_from_points:
             d_x_points, d_y_points, q2 = repel_text_from_points(x, y, texts,
                                                    ax=ax, renderer=r,
                                                    expand=expand_points)
         else:
-            d_x_points, d_y_points, q2 = [0]*len(texts), [0]*len(texts), 0
+            d_x_points, d_y_points, q2 = [0]*len(texts), [0]*len(texts), (0, 0)
 
         if text_from_objects:
             d_x_objects, d_y_objects, q3 = repel_text_from_bboxes(add_bboxes,
@@ -483,7 +497,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                                                              ax=ax, renderer=r,
                                                          expand=expand_objects)
         else:
-            d_x_objects, d_y_objects, q3 = [0]*len(texts), [0]*len(texts), 0
+            d_x_objects, d_y_objects, q3 = [0]*len(texts), [0]*len(texts), (0, 0)
 
         if only_move:
             if 'text' in only_move:
@@ -501,16 +515,21 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                     d_x_objects = np.zeros_like(d_x_objects)
                 if 'y' not in only_move['objects']:
                     d_y_objects = np.zeros_like(d_y_objects)
+
         dx = (np.array(d_x_text) * force_text[0] +
               np.array(d_x_points) * force_points[0] +
               np.array(d_x_objects) * force_objects[0])
         dy = (np.array(d_y_text) * force_text[1] +
               np.array(d_y_points) * force_points[1] +
               np.array(d_y_objects) * force_objects[1])
-        q = round(q1+q2+q3, 5)
-        if q > precision and q < np.max(history):
+        qx = round(np.sum([i[0] for i in [q1, q2, q3]]), int(-np.log10(xdiff))+1)
+        qy = round(np.sum([i[1] for i in [q1, q2, q3]]), int(-np.log10(ydiff))+1)
+        histm = np.max(np.array(history), axis=0)
+        if (qx < precision_x and qy < precision_y) or np.all([qx, qy] >= histm):
+            break
+        else:
             history.pop(0)
-            history.append(q)
+            history.append((qx, qy))
             move_texts(texts, dx, dy,
                        bboxes = get_bboxes(texts, r, (1, 1), ax), ax=ax)
             if save_steps:
@@ -521,9 +540,6 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                             format=save_format)
             elif on_basemap:
                 ax.draw(r)
-        else:
-            break
-
     for j, text in enumerate(texts):
         a = ax.annotate(text.get_text(), xy = (orig_xy[j]),
                     xytext=text.get_position(), *args, **kwargs)
