@@ -526,8 +526,8 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         dy = (np.array(d_y_text) * force_text[1] +
               np.array(d_y_points) * force_points[1] +
               np.array(d_y_objects) * force_objects[1])
-        qx = np.sum([i[0] for i in [q1, q2, q3]])
-        qy = np.sum([i[1] for i in [q1, q2, q3]])
+        qx = np.sum([q[0] for q in [q1, q2, q3]])
+        qy = np.sum([q[1] for q in [q1, q2, q3]])
         histm = np.mean(np.array(history), axis=0)
         if (qx < precision_x and qy < precision_y) or np.all([qx, qy] >= histm):
             break
