@@ -545,7 +545,8 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         qy = np.sum([i[1] for i in [q1, q2, q3]])
         histm = np.mean(np.array(history), axis=0)
         # Stop if we've reached the precision threshold, or if the x and y displacement
-        # are both greater than the average over the last 10 iterations (why?)
+        # are both greater than the average over the last 10 iterations (suggesting a
+        # failure to converge)
         if (qx < precision_x and qy < precision_y) or np.all([qx, qy] >= histm):
             break
         else:
