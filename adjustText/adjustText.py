@@ -26,6 +26,7 @@ def get_midpoint(bbox):
     return cx, cy
 
 def get_points_inside_bbox(x, y, bbox):
+    """Return the indices of points inside the given bbox."""
     x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
     x_in = np.logical_and(x>x1, x<x2)
     y_in = np.logical_and(y>y1, y<y2)
@@ -38,6 +39,8 @@ def get_renderer(fig):
         return fig.canvas.renderer
 
 def overlap_bbox_and_point(bbox, xp, yp):
+    """Given a bbox that contains a given point, return the (x, y) displacement
+    necessary to make the bbox not overlap the point."""
     cx, cy = get_midpoint(bbox)
 
     dir_x = np.sign(cx-xp)
@@ -137,6 +140,11 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
             else:
                 axout = 0
             counts.append((axout, c, intersections))
+        # Most important: prefer alignments that keep the text inside the axes.
+        # If tied, take the alignments that minimize the number of x, y points
+        # contained inside the text.
+        # Break any remaining ties by minimizing the total area of intersections
+        # with all text bboxes and other objects to avoid.
         a, value = min(enumerate(counts), key=itemgetter(1))
         if 'x' in direction:
             text.set_ha(alignment[a][0])
@@ -262,6 +270,7 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
         r = renderer
     bboxes = get_bboxes(texts, r, expand, ax=ax)
 
+    # move_x[i,j] is the x displacement of the i'th text caused by the j'th point
     move_x = np.zeros((len(bboxes), len(x)))
     move_y = np.zeros((len(bboxes), len(x)))
     for i, bbox in enumerate(bboxes):
@@ -351,23 +360,25 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
             they must have a .get_window_extent() method
         ax (obj): axes object with the plot; if not provided is determined by
             plt.gca()
-        expand_text (seq): a tuple/list/... with 2 numbers (x, y) to expand
-            the bounding box of texts when repelling them from each other;
+        expand_text (seq): a tuple/list/... with 2 multipliers (x, y) by which
+            to expand the bounding box of texts when repelling them from each other;
             default (1.2, 1.2)
-        expand_points (seq): a tuple/list/... with 2 numbers (x, y) to expand
-            the bounding box of texts when repelling them from points;
+        expand_points (seq): a tuple/list/... with 2 multipliers (x, y) by which
+            to expand the bounding box of texts when repelling them from points;
             default (1.2, 1.2)
-        expand_objects (seq): a tuple/list/... with 2 numbers (x, y) to expand
-            the bounding box of texts when repelling them from other objects;
+        expand_objects (seq): a tuple/list/... with 2 multipliers (x, y) by which
+            to expand the bounding box of texts when repelling them from other objects;
             default (1.2, 1.2)
-        expand_align (seq): a tuple/list/... with 2 numbers (x, y) to expand
-            texts when autoaligning texts; default (1., 1.)
+        expand_align (seq): a tuple/list/... with 2 multipliers (x, y) by which
+            to expand the bounding box of texts when autoaligning texts;
+            default (0.9, 0.9)
         autoalign: If 'xy', the best alignment of all texts will be
             determined in all directions automatically before running the
-            iterative adjustment; if 'x' will only align horizontally, if 'y' -
-            vertically; overrides va and ha
-        va (str): vertical alignment of texts
-        ha (str): horizontal alignment of texts
+            iterative adjustment (overriding va and ha); if 'x', will only align
+            horizontally, if 'y', vertically; if False, do nothing (i.e.
+            preserve va and ha); default 'xy'
+        va (str): vertical alignment of texts; default 'center'
+        ha (str): horizontal alignment of texts; default 'center'
         force_text (float): the repel force from texts is multiplied by this
             value; default 0.5
         force_points (float): the repel force from points is multiplied by this
@@ -375,31 +386,33 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         force_objects (float): same as other forces, but for repelling
             additional objects
         lim (int): limit of number of iterations
-        precision (float): up to which sum of all overlaps along both x and y
-            to iterate; may need to increase for complicated situations;
-            default 0, so no overlaps with anything.
+        precision (float): iterate until the sum of all overlaps along both x
+            and y are less than this amount, as a fraction of the total widths
+            and heights, respectively. May need to increase for complicated
+            situations; default 0.001
         only_move (dict): a dict to restrict movement of texts to only certain
-            axis. Valid keys are 'points' and 'text', for each of them valid
-            values are 'x', 'y' and 'xy'. This way you can forbid moving texts
-            along either of the axes due to overlaps with points, but let it
-            happen if there is an overlap with texts: only_move={'points':'y',
-            'text':'xy'}. Default: everything is allowed.
+            axis. Valid keys are 'points', 'text', and 'objects'. For each of
+            them valid values are 'x', 'y' and 'xy'. This way you can forbid
+            moving texts along either of the axes due to overlaps with points,
+            but let it happen if there is an overlap with texts:
+            only_move={'points':'y', 'text':'xy'}. Default: everything is allowed.
         text_from_text (bool): whether to repel texts from each other; default
             True
         text_from_points (bool): whether to repel texts from points; default
-            True; can helpful to switch of in extremely crouded plots
+            True; can be helpful to switch off in extremely crowded plots
         save_steps (bool): whether to save intermediate steps as images;
             default False
         save_prefix (str): a path and/or prefix to the saved steps; default ''
         save_format (str): a format to save the steps into; default 'png
-        *args and **kwargs: any arguments will be fed into plt.annotate after
-            all the optimization is done just for plotting
         add_step_numbers (bool): whether to add step numbers as titles to the
             images of saving steps
         draggable (bool): whether to make the annotations draggable; default
             True
         on_basemap (bool): whether your plot uses the basemap library, stops
             labels going over the edge of the map; default False
+        
+        *args and **kwargs: any arguments will be fed into plt.annotate after
+            all the optimization is done just for plotting
     """
     if ax is None:
         ax = plt.gca()
@@ -414,7 +427,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
 #    xdiff = np.diff(ax.get_xlim())[0]
 #    ydiff = np.diff(ax.get_ylim())[0]
 
-    bboxes = get_bboxes(texts, r)
+    bboxes = get_bboxes(texts, r, ax=ax)
     sum_width = np.sum(list(map(lambda x: x.width, bboxes)))
     sum_height = np.sum(list(map(lambda x: x.height, bboxes)))
     if not any(list(map(lambda val: 'x' in val, only_move.values()))):
@@ -463,6 +476,8 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                                          direction=autoalign, renderer=r,
                                          ax=ax)
         else:
+            # XXX: If autoalign is True, pass the coords of the original texts
+            # in place of points given by x and y. Bug or feature?
             texts = optimally_align_text(orig_x, orig_y, texts,
                                          expand=expand_align,
                                          direction='xy',
@@ -529,6 +544,9 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         qx = np.sum([q[0] for q in [q1, q2, q3]])
         qy = np.sum([q[1] for q in [q1, q2, q3]])
         histm = np.mean(np.array(history), axis=0)
+        # Stop if we've reached the precision threshold, or if the x and y displacement
+        # are both greater than the average over the last 10 iterations (suggesting a
+        # failure to converge)
         if (qx < precision_x and qy < precision_y) or np.all([qx, qy] >= histm):
             break
         else:
