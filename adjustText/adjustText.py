@@ -198,7 +198,7 @@ def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
     delta_x = move_x.sum(axis=1)
     delta_y = move_y.sum(axis=1)
 
-    q = np.sum(np.abs(delta_x)), np.sum(np.abs(delta_y))
+    q = np.sum(overlaps_x), np.sum(overlaps_y)
     if move:
         move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
     return delta_x, delta_y, q
@@ -246,7 +246,7 @@ def repel_text_from_bboxes(add_bboxes, texts, renderer=None, ax=None,
     delta_x = move_x.sum(axis=1)
     delta_y = move_y.sum(axis=1)
 
-    q = np.sum(np.abs(delta_x)), np.sum(np.abs(delta_y))
+    q = np.sum(overlaps_x), np.sum(overlaps_y)
     if move:
         move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
     return delta_x, delta_y, q
@@ -284,7 +284,7 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
 
     delta_x = move_x.sum(axis=1)
     delta_y = move_y.sum(axis=1)
-    q = np.sum(np.abs(delta_x)), np.sum(np.abs(delta_y))
+    q = np.sum(np.abs(move_x)), np.sum(np.abs(move_y))
     if move:
         move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
     return delta_x, delta_y, q
@@ -543,9 +543,9 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
               np.array(d_y_objects) * force_objects[1])
         qx = np.sum([q[0] for q in [q1, q2, q3]])
         qy = np.sum([q[1] for q in [q1, q2, q3]])
-        histm = np.mean(np.array(history), axis=0)
+        histm = np.max(np.array(history), axis=0)
         # Stop if we've reached the precision threshold, or if the x and y displacement
-        # are both greater than the average over the last 10 iterations (suggesting a
+        # are both greater than the max over the last 10 iterations (suggesting a
         # failure to converge)
         if (qx < precision_x and qy < precision_y) or np.all([qx, qy] >= histm):
             break
