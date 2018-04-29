@@ -129,7 +129,7 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
                                        transformed(ax.transData.inverted())
             c = len(get_points_inside_bbox(x, y, bbox))
             intersections = [bbox.intersection(bbox, bbox2) for bbox2 in
-                             bboxes+add_bboxes]
+                             bboxes+add_bboxes if bbox!=bbox2]
             intersections = sum([abs(b.width*b.height) if b is not None else 0
                                  for b in intersections])
             # Check for out-of-axes position
