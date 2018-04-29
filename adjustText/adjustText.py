@@ -418,7 +418,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         on_basemap (bool): whether your plot uses the basemap library, stops
             labels going over the edge of the map; default False
         
-        *args and **kwargs: any arguments will be fed into plt.annotate after
+        args and kwargs: any arguments will be fed into plt.annotate after
             all the optimization is done just for plotting
 
     """
