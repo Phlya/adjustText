@@ -1,6 +1,6 @@
 <img src="https://github.com/Phlya/adjustText/blob/master/adjustText_logo.svg" width="200">
 
-[![Documentation Status](https://readthedocs.org/projects/adjusttext/badge/?version=latest)](http://adjusttext.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/adjusttext/badge/?version=latest)](http://adjusttext.readthedocs.io/en/latest/?badge=latest)  [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/adjustText/Lobby)
 
 Inspired by **ggrepel** package for R/ggplot2 (https://github.com/slowkow/ggrepel) 
 ![Alt text](examples/mtcars.gif "Labelled mtcars dataset")
