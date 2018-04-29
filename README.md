@@ -14,7 +14,7 @@ Should be installable from pypi!
 pip install adjustText
 ```
 
-For the lates version from github:
+For the latest version from github:
 ```
 pip install https://github.com/Phlya/adjustText/archive/master.zip
 ```
