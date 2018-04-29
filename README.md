@@ -9,6 +9,8 @@ The idea is that often when we want to label multiple points on a graph the text
 
 There is a simple documentation now, thanks to Christophe Van Neste @beukueb!
 
+http://adjusttext.readthedocs.io/en/latest/
+
 Should be installable from pypi!
 ```
 pip install adjustText
