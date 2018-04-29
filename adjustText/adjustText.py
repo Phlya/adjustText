@@ -344,11 +344,18 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                 save_steps=False, save_prefix='', save_format='png',
                 add_step_numbers=True, draggable=True, on_basemap=False,
                 *args, **kwargs):
-    """
-    Iteratively adjusts the locations of texts. First moves all texts that are
-    outside the axes limits inside. Then in each iteration moves all texts away
-    from each other and from points. In the end hides texts and substitutes
-    them with annotations to link them to the respective points.
+    """Iteratively adjusts the locations of texts.
+
+    Call adjust_text the very last, after all plotting (especially
+    anything that can change the axes limits) has been done. This is
+    because to move texts the function needs to use the dimensions of
+    the axes, and without knowing the final size of the plots the
+    results will be completely nonsensical, or suboptimal.
+
+    First moves all texts that are outside the axes limits
+    inside. Then in each iteration moves all texts away from each
+    other and from points. In the end hides texts and substitutes them
+    with annotations to link them to the respective points.
 
     Args:
         texts (list): a list of text.Text objects to adjust
@@ -413,6 +420,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         
         *args and **kwargs: any arguments will be fed into plt.annotate after
             all the optimization is done just for plotting
+
     """
     if ax is None:
         ax = plt.gca()
