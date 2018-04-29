@@ -47,8 +47,7 @@ coverage.xml
 # Django stuff:
 *.log
 
-# Sphinx documentation
-docs
+# Sphinx build documentation
 docs/_build/
 
 examples/.ipynb_checkpoints/
