@@ -1,0 +1,222 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>adjustText 0.6 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-adjusttext-s-documentation">
+<h1>Welcome to adjustText’s documentation!<a class="headerlink" href="#welcome-to-adjusttext-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+<div class="section" id="module-adjustText.adjustText">
+<span id="module-documentation"></span><h1>Module documentation<a class="headerlink" href="#module-adjustText.adjustText" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="adjustText.adjustText.adjust_text">
+<code class="descclassname">adjustText.adjustText.</code><code class="descname">adjust_text</code><span class="sig-paren">(</span><em>texts</em>, <em>x=None</em>, <em>y=None</em>, <em>add_objects=None</em>, <em>ax=None</em>, <em>expand_text=(1.2</em>, <em>1.2)</em>, <em>expand_points=(1.2</em>, <em>1.2)</em>, <em>expand_objects=(1.2</em>, <em>1.2)</em>, <em>expand_align=(0.9</em>, <em>0.9)</em>, <em>autoalign='xy'</em>, <em>va='center'</em>, <em>ha='center'</em>, <em>force_text=(0.5</em>, <em>1)</em>, <em>force_points=(0.5</em>, <em>1)</em>, <em>force_objects=(0.5</em>, <em>1)</em>, <em>lim=100</em>, <em>precision=0.001</em>, <em>only_move={'objects': 'xy'</em>, <em>'points': 'xy'</em>, <em>'text': 'xy'}</em>, <em>text_from_text=True</em>, <em>text_from_points=True</em>, <em>save_steps=False</em>, <em>save_prefix=''</em>, <em>save_format='png'</em>, <em>add_step_numbers=True</em>, <em>draggable=True</em>, <em>on_basemap=False</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#adjustText.adjustText.adjust_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iteratively adjusts the locations of texts.</p>
+<p>Call adjust_text the very last, after all plotting (especially
+anything that can change the axes limits) has been done. This is
+because to move texts the function needs to use the dimensions of
+the axes, and without knowing the final size of the plots the
+results will be completely nonsensical, or suboptimal.</p>
+<p>First moves all texts that are outside the axes limits
+inside. Then in each iteration moves all texts away from each
+other and from points. In the end hides texts and substitutes them
+with annotations to link them to the respective points.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">texts (list): a list of text.Text objects to adjust
+x (seq): x-coordinates of points to repel from; if not provided only</p>
+<blockquote>
+<div>uses text coordinates</div></blockquote>
+<dl class="docutils">
+<dt>y (seq): y-coordinates of points to repel from; if not provided only</dt>
+<dd>uses text coordinates</dd>
+<dt>add_objects (list): a list of additional matplotlib objects to avoid;</dt>
+<dd>they must have a .get_window_extent() method</dd>
+<dt>ax (obj): axes object with the plot; if not provided is determined by</dt>
+<dd>plt.gca()</dd>
+<dt>expand_text (seq): a tuple/list/… with 2 multipliers (x, y) by which</dt>
+<dd>to expand the bounding box of texts when repelling them from each other;
+default (1.2, 1.2)</dd>
+<dt>expand_points (seq): a tuple/list/… with 2 multipliers (x, y) by which</dt>
+<dd>to expand the bounding box of texts when repelling them from points;
+default (1.2, 1.2)</dd>
+<dt>expand_objects (seq): a tuple/list/… with 2 multipliers (x, y) by which</dt>
+<dd>to expand the bounding box of texts when repelling them from other objects;
+default (1.2, 1.2)</dd>
+<dt>expand_align (seq): a tuple/list/… with 2 multipliers (x, y) by which</dt>
+<dd>to expand the bounding box of texts when autoaligning texts;
+default (0.9, 0.9)</dd>
+<dt>autoalign: If ‘xy’, the best alignment of all texts will be</dt>
+<dd>determined in all directions automatically before running the
+iterative adjustment (overriding va and ha); if ‘x’, will only align
+horizontally, if ‘y’, vertically; if False, do nothing (i.e.
+preserve va and ha); default ‘xy’</dd>
+</dl>
+<p>va (str): vertical alignment of texts; default ‘center’
+ha (str): horizontal alignment of texts; default ‘center’
+force_text (float): the repel force from texts is multiplied by this</p>
+<blockquote>
+<div>value; default 0.5</div></blockquote>
+<dl class="docutils">
+<dt>force_points (float): the repel force from points is multiplied by this</dt>
+<dd>value; default 0.5</dd>
+<dt>force_objects (float): same as other forces, but for repelling</dt>
+<dd>additional objects</dd>
+</dl>
+<p>lim (int): limit of number of iterations
+precision (float): iterate until the sum of all overlaps along both x</p>
+<blockquote>
+<div>and y are less than this amount, as a fraction of the total widths
+and heights, respectively. May need to increase for complicated
+situations; default 0.001</div></blockquote>
+<dl class="docutils">
+<dt>only_move (dict): a dict to restrict movement of texts to only certain</dt>
+<dd>axis. Valid keys are ‘points’, ‘text’, and ‘objects’. For each of
+them valid values are ‘x’, ‘y’ and ‘xy’. This way you can forbid
+moving texts along either of the axes due to overlaps with points,
+but let it happen if there is an overlap with texts:
+only_move={‘points’:’y’, ‘text’:’xy’}. Default: everything is allowed.</dd>
+<dt>text_from_text (bool): whether to repel texts from each other; default</dt>
+<dd>True</dd>
+<dt>text_from_points (bool): whether to repel texts from points; default</dt>
+<dd>True; can be helpful to switch off in extremely crowded plots</dd>
+<dt>save_steps (bool): whether to save intermediate steps as images;</dt>
+<dd>default False</dd>
+</dl>
+<p>save_prefix (str): a path and/or prefix to the saved steps; default ‘’
+save_format (str): a format to save the steps into; default ‘png
+add_step_numbers (bool): whether to add step numbers as titles to the</p>
+<blockquote>
+<div>images of saving steps</div></blockquote>
+<dl class="last docutils">
+<dt>draggable (bool): whether to make the annotations draggable; default</dt>
+<dd>True</dd>
+<dt>on_basemap (bool): whether your plot uses the basemap library, stops</dt>
+<dd>labels going over the edge of the map; default False</dd>
+<dt><a href="#id1"><span class="problematic" id="id2">*</span></a>args and <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs: any arguments will be fed into plt.annotate after</dt>
+<dd>all the optimization is done just for plotting</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="adjustText.adjustText.get_points_inside_bbox">
+<code class="descclassname">adjustText.adjustText.</code><code class="descname">get_points_inside_bbox</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>bbox</em><span class="sig-paren">)</span><a class="headerlink" href="#adjustText.adjustText.get_points_inside_bbox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the indices of points inside the given bbox.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="adjustText.adjustText.optimally_align_text">
+<code class="descclassname">adjustText.adjustText.</code><code class="descname">optimally_align_text</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>texts</em>, <em>expand=(1.0</em>, <em>1.0)</em>, <em>add_bboxes=[]</em>, <em>renderer=None</em>, <em>ax=None</em>, <em>direction='xy'</em><span class="sig-paren">)</span><a class="headerlink" href="#adjustText.adjustText.optimally_align_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>For all text objects find alignment that causes the least overlap with
+points and other texts and apply it</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="adjustText.adjustText.overlap_bbox_and_point">
+<code class="descclassname">adjustText.adjustText.</code><code class="descname">overlap_bbox_and_point</code><span class="sig-paren">(</span><em>bbox</em>, <em>xp</em>, <em>yp</em><span class="sig-paren">)</span><a class="headerlink" href="#adjustText.adjustText.overlap_bbox_and_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a bbox that contains a given point, return the (x, y) displacement
+necessary to make the bbox not overlap the point.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="adjustText.adjustText.repel_text">
+<code class="descclassname">adjustText.adjustText.</code><code class="descname">repel_text</code><span class="sig-paren">(</span><em>texts</em>, <em>renderer=None</em>, <em>ax=None</em>, <em>expand=(1.2</em>, <em>1.2)</em>, <em>only_use_max_min=False</em>, <em>move=False</em><span class="sig-paren">)</span><a class="headerlink" href="#adjustText.adjustText.repel_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Repel texts from each other while expanding their bounding boxes by expand
+(x, y), e.g. (1.2, 1.2) would multiply width and height by 1.2.
+Requires a renderer to get the actual sizes of the text, and to that end
+either one needs to be directly provided, or the axes have to be specified,
+and the renderer is then got from the axes object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="adjustText.adjustText.repel_text_from_bboxes">
+<code class="descclassname">adjustText.adjustText.</code><code class="descname">repel_text_from_bboxes</code><span class="sig-paren">(</span><em>add_bboxes</em>, <em>texts</em>, <em>renderer=None</em>, <em>ax=None</em>, <em>expand=(1.2</em>, <em>1.2)</em>, <em>only_use_max_min=False</em>, <em>move=False</em><span class="sig-paren">)</span><a class="headerlink" href="#adjustText.adjustText.repel_text_from_bboxes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Repel texts from other objects’ bboxes while expanding their (texts’)
+bounding boxes by expand (x, y), e.g. (1.2, 1.2) would multiply width and
+height by 1.2.
+Requires a renderer to get the actual sizes of the text, and to that end
+either one needs to be directly provided, or the axes have to be specified,
+and the renderer is then got from the axes object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="adjustText.adjustText.repel_text_from_points">
+<code class="descclassname">adjustText.adjustText.</code><code class="descname">repel_text_from_points</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>texts</em>, <em>renderer=None</em>, <em>ax=None</em>, <em>expand=(1.2</em>, <em>1.2)</em>, <em>move=False</em><span class="sig-paren">)</span><a class="headerlink" href="#adjustText.adjustText.repel_text_from_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Repel texts from all points specified by x and y while expanding their
+(texts’!) bounding boxes by expandby  (x, y), e.g. (1.2, 1.2)
+would multiply both width and height by 1.2.
+Requires a renderer to get the actual sizes of the text, and to that end
+either one needs to be directly provided, or the axes have to be specified,
+and the renderer is then got from the axes object.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html#document-index">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Ilya Flyamer.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
