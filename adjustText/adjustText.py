@@ -359,62 +359,87 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
 
     Args:
         texts (list): a list of text.Text objects to adjust
+        
         x (seq): x-coordinates of points to repel from; if not provided only
             uses text coordinates
+            
         y (seq): y-coordinates of points to repel from; if not provided only
             uses text coordinates
+            
         add_objects (list): a list of additional matplotlib objects to avoid;
             they must have a .get_window_extent() method
+            
         ax (obj): axes object with the plot; if not provided is determined by
             plt.gca()
+            
         expand_text (seq): a tuple/list/... with 2 multipliers (x, y) by which
             to expand the bounding box of texts when repelling them from each other;
             default (1.2, 1.2)
+            
         expand_points (seq): a tuple/list/... with 2 multipliers (x, y) by which
             to expand the bounding box of texts when repelling them from points;
             default (1.2, 1.2)
+            
         expand_objects (seq): a tuple/list/... with 2 multipliers (x, y) by which
             to expand the bounding box of texts when repelling them from other objects;
             default (1.2, 1.2)
+            
         expand_align (seq): a tuple/list/... with 2 multipliers (x, y) by which
             to expand the bounding box of texts when autoaligning texts;
             default (0.9, 0.9)
+            
         autoalign: If 'xy', the best alignment of all texts will be
             determined in all directions automatically before running the
             iterative adjustment (overriding va and ha); if 'x', will only align
             horizontally, if 'y', vertically; if False, do nothing (i.e.
             preserve va and ha); default 'xy'
+            
         va (str): vertical alignment of texts; default 'center'
+        
         ha (str): horizontal alignment of texts; default 'center'
+        
         force_text (float): the repel force from texts is multiplied by this
             value; default 0.5
+            
         force_points (float): the repel force from points is multiplied by this
             value; default 0.5
+            
         force_objects (float): same as other forces, but for repelling
             additional objects
+            
         lim (int): limit of number of iterations
+        
         precision (float): iterate until the sum of all overlaps along both x
             and y are less than this amount, as a fraction of the total widths
             and heights, respectively. May need to increase for complicated
             situations; default 0.001
+            
         only_move (dict): a dict to restrict movement of texts to only certain
             axis. Valid keys are 'points', 'text', and 'objects'. For each of
             them valid values are 'x', 'y' and 'xy'. This way you can forbid
             moving texts along either of the axes due to overlaps with points,
             but let it happen if there is an overlap with texts:
             only_move={'points':'y', 'text':'xy'}. Default: everything is allowed.
+            
         text_from_text (bool): whether to repel texts from each other; default
             True
+            
         text_from_points (bool): whether to repel texts from points; default
             True; can be helpful to switch off in extremely crowded plots
+            
         save_steps (bool): whether to save intermediate steps as images;
             default False
+            
         save_prefix (str): a path and/or prefix to the saved steps; default ''
-        save_format (str): a format to save the steps into; default 'png
+        
+        save_format (str): a format to save the steps into; default 'png'
+        
         add_step_numbers (bool): whether to add step numbers as titles to the
             images of saving steps
+            
         draggable (bool): whether to make the annotations draggable; default
             True
+            
         on_basemap (bool): whether your plot uses the basemap library, stops
             labels going over the edge of the map; default False
         
