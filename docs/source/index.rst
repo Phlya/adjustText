@@ -9,6 +9,7 @@ Welcome to adjustText's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   ../examples/Examples.ipynb
 
 
 
