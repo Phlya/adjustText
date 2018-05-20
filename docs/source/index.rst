@@ -24,5 +24,6 @@ Indices and tables
 
 Module documentation
 ====================
+
 .. automodule:: adjustText
    :members: adjust_text

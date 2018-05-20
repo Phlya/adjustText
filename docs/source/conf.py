@@ -1,3 +1,8 @@
+import sys
+import os
+import matplotlib
+sys.path.insert(0, os.path.abspath('../..'))
+matplotlib.use('Agg')
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
@@ -161,3 +166,4 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
+
