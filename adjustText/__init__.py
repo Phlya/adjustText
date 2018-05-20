@@ -112,7 +112,7 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
     if 'y' not in direction:
         va = ['']
     else:
-        va = ['bottom', 'top', 'center']
+        va = ['center', 'top', 'bottom']
     alignment = list(product(ha, va))
 #    coords = np.array(zip(x, y))
     for i, text in enumerate(texts):
@@ -128,8 +128,8 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
             bbox = text.get_window_extent(r).expanded(*expand).\
                                        transformed(ax.transData.inverted())
             c = len(get_points_inside_bbox(x, y, bbox))
-            intersections = [bbox.intersection(bbox, bbox2) for bbox2 in
-                             bboxes+add_bboxes if bbox!=bbox2]
+            intersections = [bbox.intersection(bbox, bbox2) if i!=j else None
+                             for j, bbox2 in enumerate(bboxes+add_bboxes) ]
             intersections = sum([abs(b.width*b.height) if b is not None else 0
                                  for b in intersections])
             # Check for out-of-axes position
@@ -417,7 +417,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
             True
         on_basemap (bool): whether your plot uses the basemap library, stops
             labels going over the edge of the map; default False
-        
+
         args and kwargs: any arguments will be fed into plt.annotate after
             all the optimization is done just for plotting
 
@@ -568,7 +568,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         # are both greater than the max over the last 10 iterations (suggesting a
         # failure to converge)
         if (qx < precision_x and qy < precision_y) or np.all([qx, qy] >= histm):
-            break            
+            break
     for j, text in enumerate(texts):
         a = ax.annotate(text.get_text(), xy = (orig_xy[j]),
                     xytext=text.get_position(), *args, **kwargs)
