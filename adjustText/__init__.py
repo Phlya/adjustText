@@ -338,7 +338,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                 autoalign='xy',  va='center', ha='center',
                 force_text=(0.1, 0.25), force_points=(0.2, 0.5),
                 force_objects=(0.1, 0.25),
-                lim=500, precision=0.1,
+                lim=500, precision=0.01,
                 only_move={'points':'xy', 'text':'xy', 'objects':'xy'},
                 text_from_text=True, text_from_points=True,
                 save_steps=False, save_prefix='', save_format='png',
@@ -396,7 +396,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         precision (float): iterate until the sum of all overlaps along both x
             and y are less than this amount, as a fraction of the total widths
             and heights, respectively. May need to increase for complicated
-            situations; default 0.001
+            situations; default 0.01
         only_move (dict): a dict to restrict movement of texts to only certain
             axis. Valid keys are 'points', 'text', and 'objects'. For each of
             them valid values are 'x', 'y' and 'xy'. This way you can forbid
