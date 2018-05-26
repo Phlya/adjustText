@@ -14,7 +14,7 @@ def get_text_position(text, ax=None):
     return (ax.xaxis.convert_units(x),
             ax.yaxis.convert_units(y))
 
-def get_bboxes(objs, r, expand=(1.0, 1.0), ax=None):
+def get_bboxes(objs, r, expand, ax):
     if ax is None:
         ax = plt.gca()
     return [i.get_window_extent(r).expanded(*expand).transformed(ax.\
@@ -30,7 +30,7 @@ def get_points_inside_bbox(x, y, bbox):
     x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
     x_in = np.logical_and(x>x1, x<x2)
     y_in = np.logical_and(y>y1, y<y2)
-    return np.where(x_in & y_in)[0]
+    return np.asarray(np.nonzero(x_in & y_in)[0])
 
 def get_renderer(fig):
     try:
@@ -108,11 +108,11 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
     if 'x' not in direction:
         ha = ['']
     else:
-        ha = ['center', 'left', 'right']
+        ha = ['left', 'right', 'center']
     if 'y' not in direction:
         va = ['']
     else:
-        va = ['center', 'top', 'bottom']
+        va = ['bottom', 'top', 'center']
     alignment = list(product(ha, va))
 #    coords = np.array(zip(x, y))
     for i, text in enumerate(texts):
@@ -333,12 +333,12 @@ def float_to_tuple(a):
         return b
 
 def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
-                expand_text=(1.2, 1.2), expand_points=(1.2, 1.2),
-                expand_objects=(1.2, 1.2), expand_align=(0.9, 0.9),
+                expand_text=(1.05, 1.2), expand_points=(1.05, 1.2),
+                expand_objects=(1.05, 1.2), expand_align=(1.05, 1.2),
                 autoalign='xy',  va='center', ha='center',
-                force_text=(0.5, 1), force_points=(0.5, 1),
-                force_objects=(0.5, 1),
-                lim=100, precision=0.001,
+                force_text=(0.1, 0.25), force_points=(0.2, 0.5),
+                force_objects=(0.1, 0.25),
+                lim=500, precision=0.1,
                 only_move={'points':'xy', 'text':'xy', 'objects':'xy'},
                 text_from_text=True, text_from_points=True,
                 save_steps=False, save_prefix='', save_format='png',
@@ -369,17 +369,17 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
             plt.gca()
         expand_text (seq): a tuple/list/... with 2 multipliers (x, y) by which
             to expand the bounding box of texts when repelling them from each other;
-            default (1.2, 1.2)
+            default (1.05, 1.2)
         expand_points (seq): a tuple/list/... with 2 multipliers (x, y) by which
             to expand the bounding box of texts when repelling them from points;
-            default (1.2, 1.2)
+            default (1.05, 1.2)
         expand_objects (seq): a tuple/list/... with 2 multipliers (x, y) by which
             to expand the bounding box of texts when repelling them from other objects;
-            default (1.2, 1.2)
+            default (1.05, 1.2)
         expand_align (seq): a tuple/list/... with 2 multipliers (x, y) by which
             to expand the bounding box of texts when autoaligning texts;
-            default (0.9, 0.9)
-        autoalign: If 'xy', the best alignment of all texts will be
+            default (1.05, 1.2)
+        autoalign: If 'xy' or True, the best alignment of all texts will be
             determined in all directions automatically before running the
             iterative adjustment (overriding va and ha); if 'x', will only align
             horizontally, if 'y', vertically; if False, do nothing (i.e.
@@ -387,11 +387,11 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         va (str): vertical alignment of texts; default 'center'
         ha (str): horizontal alignment of texts; default 'center'
         force_text (float): the repel force from texts is multiplied by this
-            value; default 0.5
+            value; default (0.1, 0.25)
         force_points (float): the repel force from points is multiplied by this
-            value; default 0.5
+            value; default (0.2, 0.5)
         force_objects (float): same as other forces, but for repelling
-            additional objects
+            additional objects; default (0.1, 0.25)
         lim (int): limit of number of iterations
         precision (float): iterate until the sum of all overlaps along both x
             and y are less than this amount, as a fraction of the total widths
@@ -420,7 +420,6 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
 
         args and kwargs: any arguments will be fed into plt.annotate after
             all the optimization is done just for plotting
-
     """
     if ax is None:
         ax = plt.gca()
@@ -435,7 +434,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
 #    xdiff = np.diff(ax.get_xlim())[0]
 #    ydiff = np.diff(ax.get_ylim())[0]
 
-    bboxes = get_bboxes(texts, r, ax=ax)
+    bboxes = get_bboxes(texts, r, (1.0, 1.0), ax)
     sum_width = np.sum(list(map(lambda x: x.width, bboxes)))
     sum_height = np.sum(list(map(lambda x: x.height, bboxes)))
     if not any(list(map(lambda val: 'x' in val, only_move.values()))):
@@ -460,7 +459,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         add_bboxes = []
     else:
         try:
-            add_bboxes = get_bboxes(add_objects, r, ax=ax)
+            add_bboxes = get_bboxes(add_objects, r, (1, 1), ax)
         except:
             raise ValueError("Can't get bounding boxes from add_objects - is'\
                              it a flat list of matplotlib objects?")
@@ -478,18 +477,12 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         ax.draw(r)
 
     if autoalign:
-        if autoalign is not True:
+        if autoalign is True:
+            autoalign='xy'
+        for i in range(2):
             texts = optimally_align_text(x, y, texts, expand=expand_align,
                                          add_bboxes=add_bboxes,
                                          direction=autoalign, renderer=r,
-                                         ax=ax)
-        else:
-            # XXX: If autoalign is True, pass the coords of the original texts
-            # in place of points given by x and y. Bug or feature?
-            texts = optimally_align_text(orig_x, orig_y, texts,
-                                         expand=expand_align,
-                                         direction='xy',
-                                         add_bboxes=add_bboxes, renderer=r,
                                          ax=ax)
 
     if save_steps:
