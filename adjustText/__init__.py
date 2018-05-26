@@ -472,7 +472,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         if add_step_numbers:
             plt.title('Before')
         plt.savefig('%s%s.%s' % (save_prefix,
-                            '000a', save_format), format=save_format)
+                            '000a', save_format), format=save_format, dpi=150)
     elif on_basemap:
         ax.draw(r)
 
@@ -489,7 +489,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         if add_step_numbers:
             plt.title('Autoaligned')
         plt.savefig('%s%s.%s' % (save_prefix,
-                            '000b', save_format), format=save_format)
+                            '000b', save_format), format=save_format, dpi=150)
     elif on_basemap:
         ax.draw(r)
 
@@ -554,7 +554,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                 plt.title(i+1)
             plt.savefig('%s%s.%s' % (save_prefix,
                         '{0:03}'.format(i+1), save_format),
-                        format=save_format)
+                        format=save_format, dpi=150)
         elif on_basemap:
             ax.draw(r)
         # Stop if we've reached the precision threshold, or if the x and y displacement
@@ -574,7 +574,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
             plt.title(i+1)
             plt.savefig('%s%s.%s' % (save_prefix,
                         '{0:03}'.format(i+1), save_format),
-                        format=save_format)
+                        format=save_format, dpi=150)
     elif on_basemap:
         ax.draw(r)
 
