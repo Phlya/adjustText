@@ -24,4 +24,4 @@ pip install https://github.com/Phlya/adjustText/archive/master.zip
 See [wiki] for some basic introduction, and more advanced usage examples [here].
 
 [wiki]: https://github.com/Phlya/adjustText/wiki
-[here]: https://github.com/Phlya/adjustText/blob/master/examples/Examples.ipynb
+[here]: https://github.com/Phlya/adjustText/blob/master/docs/source/Examples.ipynb
