@@ -88,6 +88,7 @@ def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
         newx = x + dx
         newy = y + dy
         text.set_position((newx, newy))
+    return texts
 
 def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
                          renderer=None, ax=None,
@@ -200,7 +201,7 @@ def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
 
     q = np.sum(overlaps_x), np.sum(overlaps_y)
     if move:
-        move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
+        texts = move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
     return delta_x, delta_y, q
 
 def repel_text_from_bboxes(add_bboxes, texts, renderer=None, ax=None,
@@ -248,7 +249,7 @@ def repel_text_from_bboxes(add_bboxes, texts, renderer=None, ax=None,
 
     q = np.sum(overlaps_x), np.sum(overlaps_y)
     if move:
-        move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
+        texts = move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
     return delta_x, delta_y, q
 
 def repel_text_from_points(x, y, texts, renderer=None, ax=None,
@@ -286,7 +287,7 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
     delta_y = move_y.sum(axis=1)
     q = np.sum(np.abs(move_x)), np.sum(np.abs(move_y))
     if move:
-        move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
+        texts = move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
     return delta_x, delta_y, q
 
 def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
@@ -547,7 +548,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         histm = np.max(np.array(history), axis=0)
         history.pop(0)
         history.append((qx, qy))
-        move_texts(texts, dx, dy,
+        texts = move_texts(texts, dx, dy,
                    bboxes = get_bboxes(texts, r, (1, 1), ax), ax=ax)
         if save_steps:
             if add_step_numbers:
@@ -563,17 +564,18 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         if (qx < precision_x and qy < precision_y) or np.all([qx, qy] >= histm):
             break
         # Now adding arrows from texts to their original locations if required
-        if 'arrowprops' in kwargs:
-            bboxes = get_bboxes(texts, r, (1, 1), ax)
-            kwap = kwargs.pop('arrowprops')
-            for j, (bbox, text) in enumerate(zip(bboxes, texts)):
-                ap = {'patchA':text} # Ensure arrow is clipped by the text
-                ap.update(kwap) # Add arrowprops from kwargs
-                ax.annotate("", # Add an arrow from the text to the point
-                            xy = (orig_xy[j]),
-                            xytext=get_midpoint(bbox),
-                            arrowprops=ap,
-                            *args, **kwargs)
+    if 'arrowprops' in kwargs:
+        bboxes = get_bboxes(texts, r, (1, 1), ax)
+        kwap = kwargs.pop('arrowprops')
+        for j, (bbox, text) in enumerate(zip(bboxes, texts)):
+            ap = {'patchA':text} # Ensure arrow is clipped by the text
+            ap.update(kwap) # Add arrowprops from kwargs
+            ax.annotate("", # Add an arrow from the text to the point
+                        xy = (orig_xy[j]),
+                        xytext=get_midpoint(bbox),
+                        arrowprops=ap,
+                        *args, **kwargs)
+
     if save_steps:
         if add_step_numbers:
             plt.title(i+1)
