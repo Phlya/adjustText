@@ -562,13 +562,18 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         # failure to converge)
         if (qx < precision_x and qy < precision_y) or np.all([qx, qy] >= histm):
             break
-    for j, text in enumerate(texts):
-        a = ax.annotate(text.get_text(), xy = (orig_xy[j]),
-                    xytext=text.get_position(), *args, **kwargs)
-        a.__dict__.update(text.__dict__)
-        if draggable:
-            a.draggable()
-        texts[j].remove()
+        # Now adding arrows from texts to their original locations if required
+        if 'arrowprops' in kwargs:
+            bboxes = get_bboxes(texts, r, (1, 1), ax)
+            kwap = kwargs.pop('arrowprops')
+            for j, (bbox, text) in enumerate(zip(bboxes, texts)):
+                ap = {'patchA':text} # Ensure arrow is clipped by the text
+                ap.update(kwap) # Add arrowprops from kwargs
+                ax.annotate("", # Add an arrow from the text to the point
+                            xy = (orig_xy[j]),
+                            xytext=get_midpoint(bbox),
+                            arrowprops=ap,
+                            *args, **kwargs)
     if save_steps:
         if add_step_numbers:
             plt.title(i+1)
