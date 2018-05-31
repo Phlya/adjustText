@@ -88,7 +88,6 @@ def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
         newx = x + dx
         newy = y + dy
         text.set_position((newx, newy))
-    return texts
 
 def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
                          renderer=None, ax=None,
@@ -201,7 +200,7 @@ def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
 
     q = np.sum(overlaps_x), np.sum(overlaps_y)
     if move:
-        texts = move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
+        move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
     return delta_x, delta_y, q
 
 def repel_text_from_bboxes(add_bboxes, texts, renderer=None, ax=None,
@@ -249,7 +248,7 @@ def repel_text_from_bboxes(add_bboxes, texts, renderer=None, ax=None,
 
     q = np.sum(overlaps_x), np.sum(overlaps_y)
     if move:
-        texts = move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
+        move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
     return delta_x, delta_y, q
 
 def repel_text_from_points(x, y, texts, renderer=None, ax=None,
@@ -287,7 +286,7 @@ def repel_text_from_points(x, y, texts, renderer=None, ax=None,
     delta_y = move_y.sum(axis=1)
     q = np.sum(np.abs(move_x)), np.sum(np.abs(move_y))
     if move:
-        texts = move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
+        move_texts(texts, delta_x, delta_y, bboxes, ax=ax)
     return delta_x, delta_y, q
 
 def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
@@ -548,7 +547,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         histm = np.max(np.array(history), axis=0)
         history.pop(0)
         history.append((qx, qy))
-        texts = move_texts(texts, dx, dy,
+        move_texts(texts, dx, dy,
                    bboxes = get_bboxes(texts, r, (1, 1), ax), ax=ax)
         if save_steps:
             if add_step_numbers:
