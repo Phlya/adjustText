@@ -342,7 +342,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                 only_move={'points':'xy', 'text':'xy', 'objects':'xy'},
                 text_from_text=True, text_from_points=True,
                 save_steps=False, save_prefix='', save_format='png',
-                add_step_numbers=True, draggable=True, on_basemap=False,
+                add_step_numbers=True, on_basemap=False,
                 *args, **kwargs):
     """Iteratively adjusts the locations of texts.
 
@@ -413,13 +413,11 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         save_format (str): a format to save the steps into; default 'png
         add_step_numbers (bool): whether to add step numbers as titles to the
             images of saving steps
-        draggable (bool): whether to make the annotations draggable; default
-            True
         on_basemap (bool): whether your plot uses the basemap library, stops
             labels going over the edge of the map; default False
-
-        args and kwargs: any arguments will be fed into plt.annotate after
-            all the optimization is done just for plotting
+        args and kwargs: any arguments will be fed into ax.annotate after
+            all the optimization is done just for plotting the connecting arrows
+            if required
     """
     if ax is None:
         ax = plt.gca()
@@ -435,8 +433,8 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
 #    ydiff = np.diff(ax.get_ylim())[0]
 
     bboxes = get_bboxes(texts, r, (1.0, 1.0), ax)
-    sum_width = np.sum(list(map(lambda x: x.width, bboxes)))
-    sum_height = np.sum(list(map(lambda x: x.height, bboxes)))
+    sum_width = np.sum(list(map(lambda bbox: bbox.width, bboxes)))
+    sum_height = np.sum(list(map(lambda bbox: bbox.height, bboxes)))
     if not any(list(map(lambda val: 'x' in val, only_move.values()))):
         precision_x = np.inf
     else:
