@@ -11,9 +11,14 @@ There is a simple documentation now, thanks to Christophe Van Neste @beukueb!
 
 http://adjusttext.readthedocs.io/en/latest/
 
-Should be installable from pypi!
+Should be installable from pypi:
 ```
 pip install adjustText
+```
+Or with `conda`:
+```
+conda install -c phlya adjusttext 
+
 ```
 
 For the latest version from github:
