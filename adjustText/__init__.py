@@ -70,8 +70,8 @@ def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
         else:
             r = renderer
         bboxes = get_bboxes(texts, r, (1, 1), ax=ax)
-    xmin, xmax = ax.get_xlim()
-    ymin, ymax = ax.get_ylim()
+    xmin, xmax = sorted(ax.get_xlim())
+    ymin, ymax = sorted(ax.get_ylim())
     for i, (text, dx, dy) in enumerate(zip(texts, delta_x, delta_y)):
         bbox = bboxes[i]
         x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
@@ -102,8 +102,8 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
         r = get_renderer(ax.get_figure())
     else:
         r = renderer
-    xmin, xmax = ax.get_xlim()
-    ymin, ymax = ax.get_ylim()
+    xmin, xmax = sorted(ax.get_xlim())
+    ymin, ymax = sorted(ax.get_ylim())
     bboxes = get_bboxes(texts, r, expand, ax=ax)
     if 'x' not in direction:
         ha = ['']
@@ -301,8 +301,8 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
         expand = (1, 1)
     if bboxes is None:
         bboxes = get_bboxes(texts, r, expand=expand, ax=ax)
-    xmin, xmax = ax.get_xlim()
-    ymin, ymax = ax.get_ylim()
+    xmin, xmax = sorted(ax.get_xlim())
+    ymin, ymax = sorted(ax.get_ylim())
     for i, bbox in enumerate(bboxes):
         x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
         dx, dy = 0, 0
@@ -419,6 +419,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
             all the optimization is done just for plotting the connecting arrows
             if required
     """
+    plt.draw()
     if ax is None:
         ax = plt.gca()
     r = get_renderer(ax.get_figure())
