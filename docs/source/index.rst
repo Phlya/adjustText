@@ -13,6 +13,7 @@ The repository with the issue tracker can be found here: https://github.com/Phly
    :maxdepth: 1
 
    Examples.ipynb
+   Examples-for-multiple-subplots.ipynb
 
 
 Indices and tables
