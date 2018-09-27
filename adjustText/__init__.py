@@ -398,11 +398,11 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
             and heights, respectively. May need to increase for complicated
             situations; default 0.01
         only_move (dict): a dict to restrict movement of texts to only certain
-            axis. Valid keys are 'points', 'text', and 'objects'. For each of
-            them valid values are 'x', 'y' and 'xy'. This way you can forbid
-            moving texts along either of the axes due to overlaps with points,
-            but let it happen if there is an overlap with texts:
-            only_move={'points':'y', 'text':'xy'}. Default: everything is allowed.
+            axes for certain types of overlaps. Valid keys are 'points', 'text',
+            and 'objects'. Valid values are '', 'x', 'y', and 'xy'.
+            For example, only_move={'points':'y', 'text':'xy', 'objects':'xy'}
+            forbids moving texts along the x axis due to overlaps with points.
+            Default: everything is allowed.
         text_from_text (bool): whether to repel texts from each other; default
             True
         text_from_points (bool): whether to repel texts from points; default
