@@ -1,6 +1,10 @@
 <img src="https://github.com/Phlya/adjustText/blob/master/adjustText_logo.svg" width="183">
 
-[![Documentation Status](https://readthedocs.org/projects/adjusttext/badge/?version=latest)](http://adjusttext.readthedocs.io/en/latest/?badge=latest)  [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/adjustText/Lobby)
+[![Documentation Status](https://readthedocs.org/projects/adjusttext/badge/?version=latest)](http://adjusttext.readthedocs.io/en/latest/?badge=latest)
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/adjustText/Lobby) 
+[![DOI](https://zenodo.org/badge/49349828.svg)](https://zenodo.org/badge/latestdoi/49349828)
+
+
 
 # adjustText - automatic label placement for `matplotlib`
 
