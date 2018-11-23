@@ -37,12 +37,12 @@ pip install https://github.com/Phlya/adjustText/archive/master.zip
 
 [Wiki] has some basic introduction, and more advanced usage examples can be found [here].
 
-Thanks to Christophe Van Neste @beukueb, `adjustText` has a simple documentation:
+Thanks to Christophe Van Neste @beukueb, **adjustText** has a simple documentation:
 http://adjusttext.readthedocs.io/en/latest/
 
 [Wiki]: https://github.com/Phlya/adjustText/wiki
 [here]: https://github.com/Phlya/adjustText/blob/master/docs/source/Examples.ipynb
 
-## Citing
+## Citing **adjustText**
 
-To cite the library if you use it in scientific publications (or anywhere else, if you wish), please use the link to the GitHub repository and a zenodo doi (see top of this page). Thank you!
+To cite the library if you use it in scientific publications (or anywhere else, if you wish), please use the link to the GitHub repository (https://github.com/Phlya/adjustText) and a zenodo doi (see top of this page). Thank you!
