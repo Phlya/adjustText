@@ -357,67 +357,91 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
     other and from points. In the end hides texts and substitutes them
     with annotations to link them to the respective points.
 
-    Args:
-        texts (list): a list of text.Text objects to adjust
-        x (seq): x-coordinates of points to repel from; if not provided only
-            uses text coordinates
-        y (seq): y-coordinates of points to repel from; if not provided only
-            uses text coordinates
-        add_objects (list): a list of additional matplotlib objects to avoid;
-            they must have a .get_window_extent() method
-        ax (obj): axes object with the plot; if not provided is determined by
-            plt.gca()
-        expand_text (seq): a tuple/list/... with 2 multipliers (x, y) by which
-            to expand the bounding box of texts when repelling them from each other;
-            default (1.05, 1.2)
-        expand_points (seq): a tuple/list/... with 2 multipliers (x, y) by which
-            to expand the bounding box of texts when repelling them from points;
-            default (1.05, 1.2)
-        expand_objects (seq): a tuple/list/... with 2 multipliers (x, y) by which
-            to expand the bounding box of texts when repelling them from other objects;
-            default (1.05, 1.2)
-        expand_align (seq): a tuple/list/... with 2 multipliers (x, y) by which
-            to expand the bounding box of texts when autoaligning texts;
-            default (1.05, 1.2)
-        autoalign: If 'xy' or True, the best alignment of all texts will be
-            determined in all directions automatically before running the
-            iterative adjustment (overriding va and ha); if 'x', will only align
-            horizontally, if 'y', vertically; if False, do nothing (i.e.
-            preserve va and ha); default 'xy'
-        va (str): vertical alignment of texts; default 'center'
-        ha (str): horizontal alignment of texts; default 'center'
-        force_text (float): the repel force from texts is multiplied by this
-            value; default (0.1, 0.25)
-        force_points (float): the repel force from points is multiplied by this
-            value; default (0.2, 0.5)
-        force_objects (float): same as other forces, but for repelling
-            additional objects; default (0.1, 0.25)
-        lim (int): limit of number of iterations
-        precision (float): iterate until the sum of all overlaps along both x
-            and y are less than this amount, as a fraction of the total widths
-            and heights, respectively. May need to increase for complicated
-            situations; default 0.01
-        only_move (dict): a dict to restrict movement of texts to only certain
-            axes for certain types of overlaps. Valid keys are 'points', 'text',
-            and 'objects'. Valid values are '', 'x', 'y', and 'xy'.
-            For example, only_move={'points':'y', 'text':'xy', 'objects':'xy'}
-            forbids moving texts along the x axis due to overlaps with points.
-            Default: everything is allowed.
-        text_from_text (bool): whether to repel texts from each other; default
-            True
-        text_from_points (bool): whether to repel texts from points; default
-            True; can be helpful to switch off in extremely crowded plots
-        save_steps (bool): whether to save intermediate steps as images;
-            default False
-        save_prefix (str): a path and/or prefix to the saved steps; default ''
-        save_format (str): a format to save the steps into; default 'png
-        add_step_numbers (bool): whether to add step numbers as titles to the
-            images of saving steps
-        on_basemap (bool): whether your plot uses the basemap library, stops
-            labels going over the edge of the map; default False
-        args and kwargs: any arguments will be fed into ax.annotate after
-            all the optimization is done just for plotting the connecting arrows
-            if required
+    Parameters
+    ----------
+    texts : list
+        A list of :obj:`matplotlib.text.Text` objects to adjust.
+
+    Other Parameters
+    ----------------
+    x : array_like
+        x-coordinates of points to repel from; if not provided only uses text coordinates.
+    y : array_like
+        y-coordinates of points to repel from; if not provided only uses text coordinates
+    add_objects : list
+        a list of additional matplotlib objects to avoid; they must have a
+        .get_window_extent() method.
+    ax : matplotlib axe, default is current axe (plt.gca())
+        axe object with the plot
+    expand_text : array_like, default (1.05, 1.2)
+        a tuple/list/... with 2 multipliers (x, y) by which to expand the bounding box of
+        texts when repelling them from each other.
+    expand_points : array_like, default (1.05, 1.2)
+        a tuple/list/... with 2 multipliers (x, y) by which to expand the bounding box of
+        texts when repelling them from points.
+    expand_objects : array_like, default (1.05, 1.2)
+        a tuple/list/... with 2 multipliers (x, y) by which to expand the bounding box of
+        texts when repelling them from other objects.
+    expand_align : array_like, default (1.05, 1.2)
+        a tuple/list/... with 2 multipliers (x, y) by which to expand the bounding box of
+        texts when autoaligning texts.
+    autoalign: str or boolean {'xy', 'x', 'y', True, False}, default 'xy'
+        Direction alongwith the best alignement will be determined
+
+            * 'xy' or True, best alignment of all texts determined in all directions
+            automatically before running the iterative adjustment (overriding va and ha),
+            * 'x', will only align horizontally,
+            * 'y', will only align vertically,
+            * False, do nothing (i.e. preserve va and ha)
+    va : str, default 'center'
+        vertical alignment of texts
+    ha : str
+        horizontal alignment of texts,
+    force_text : tuple, default (0.1, 0.25)
+        the repel force from texts is multiplied by this value
+    force_points : tuple, default (0.2, 0.5)
+        the repel force from points is multiplied by this value
+    force_objects (float): same as other forces, but for repelling
+        additional objects; default (0.1, 0.25)
+    lim : int, default 500
+        limit of number of iterations
+    precision : float, default 0.01
+        iterate until the sum of all overlaps along both x and y are less than this
+        amount, as a fraction of the total widths and heights, respectively. May need to
+        increase for complicated situations.
+    only_move : dict, default {'points':'xy', 'text':'xy', 'objects':'xy'}
+        a dict to restrict movement of texts to only certain axes for certain types of
+        overlaps. 
+        Valid keys are 'points', 'text', and 'objects'. 
+        Valid values are '', 'x', 'y', and 'xy'.
+        For example, only_move={'points':'y', 'text':'xy', 'objects':'xy'}
+        forbids moving texts along the x axis due to overlaps with points.
+        Default: everything is allowed.
+    text_from_text : bool, default True
+        whether to repel texts from each other.
+    text_from_points : bool, default True
+        whether to repel texts from points. Can be helpful to switch off in extremely
+        crowded plots.
+    save_steps : bool, default False
+        whether to save intermediate steps as images.
+    save_prefix : str, default ''
+        if `save_steps` is True, a path and/or prefix to the saved steps.
+    save_format : str, default 'png'
+        if `save_steps` is True, a format to save the steps into.
+    add_step_numbers : bool
+        if `save_steps` is True, whether to add step numbers as titles to the images of
+        saving steps.
+    on_basemap : bool, default False
+        whether your plot uses the basemap library, stops labels going over the edge of
+        the map.
+    args and kwargs: 
+        any arguments will be fed into obj:`ax.annotate` after all the optimization is
+        done just for plotting the connecting arrows if required
+
+    Return
+    ------
+    i : int
+        Number of iteration
     """
     plt.draw()
     if ax is None:
