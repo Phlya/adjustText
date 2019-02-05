@@ -160,7 +160,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'adjustText', 'adjustText Documentation',
-     author, 'adjustText', 'One line description of project.',
+     author, 'adjustText', 'Auto adjust text for non-overlapping plot.',
      'Miscellaneous'),
 ]
 
