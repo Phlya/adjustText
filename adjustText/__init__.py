@@ -390,22 +390,23 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
     autoalign: str or boolean {'xy', 'x', 'y', True, False}, default 'xy'
         Direction in wich the best alignement will be determined
 
-            - 'xy' or True, best alignment of all texts determined in all
-            directions automatically before running the iterative adjustment
-            (overriding va and ha),
-            - 'x', will only align horizontally,
-            - 'y', will only align vertically,
-            - False, do nothing (i.e. preserve va and ha)
+        - 'xy' or True, best alignment of all texts determined in all
+          directions automatically before running the iterative adjustment
+          (overriding va and ha),
+        - 'x', will only align horizontally,
+        - 'y', will only align vertically,
+        - False, do nothing (i.e. preserve va and ha)
+
     va : str, default 'center'
         vertical alignment of texts
-    ha : str
+    ha : str, default 'center'
         horizontal alignment of texts,
     force_text : tuple, default (0.1, 0.25)
         the repel force from texts is multiplied by this value
     force_points : tuple, default (0.2, 0.5)
         the repel force from points is multiplied by this value
-    force_objects (float): same as other forces, but for repelling
-        additional objects; default (0.1, 0.25)
+    force_objects : float, default (0.1, 0.25)
+        same as other forces, but for repelling additional objects
     lim : int, default 500
         limit of number of iterations
     precision : float, default 0.01
@@ -430,7 +431,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         if `save_steps` is True, a path and/or prefix to the saved steps.
     save_format : str, default 'png'
         if `save_steps` is True, a format to save the steps into.
-    add_step_numbers : bool
+    add_step_numbers : bool, default True
         if `save_steps` is True, whether to add step numbers as titles to the
         images of saving steps.
     on_basemap : bool, default False
@@ -443,7 +444,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
 
     Return
     ------
-    i : int
+    int
         Number of iteration
     """
     plt.draw()
