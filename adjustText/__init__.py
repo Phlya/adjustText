@@ -384,7 +384,7 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
                 force_objects=(0.1, 0.25),
                 lim=500, precision=0.01,
                 only_move={'points':'xy', 'text':'xy', 'objects':'xy'},
-                text_from_text=True, text_from_points=True,
+                avoid_text=True, avoid_points=True, avoid_self=True,
                 save_steps=False, save_prefix='', save_format='png',
                 add_step_numbers=True, on_basemap=False,
                 *args, **kwargs):
@@ -464,11 +464,13 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         Valid values are '', 'x', 'y', and 'xy'.
         For example, only_move={'points':'y', 'text':'xy', 'objects':'xy'}
         forbids moving texts along the x axis due to overlaps with points.
-    text_from_text : bool, default True
+    avoid_text : bool, default True
         whether to repel texts from each other.
-    text_from_points : bool, default True
+    avoid_points : bool, default True
         whether to repel texts from points. Can be helpful to switch off in
         extremely crowded plots.
+    avoid_self : bool, default True
+        whether to repel texts from its original positions.
     save_steps : bool, default False
         whether to save intermediate steps as images.
     save_prefix : str, default ''
@@ -520,7 +522,10 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
 
     if x is None:
         if y is None:
-            x, y = orig_x, orig_y
+            if avoid_self:
+                x, y = orig_x, orig_y
+            else:
+                x, y = [], []
         else:
             raise ValueError('Please specify both x and y, or neither')
     if y is None:
@@ -569,13 +574,13 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
     for i in xrange(lim):
 #        q1, q2 = [np.inf, np.inf], [np.inf, np.inf]
 
-        if text_from_text:
+        if avoid_text:
             d_x_text, d_y_text, q1 = repel_text(texts, renderer=r, ax=ax,
                                                 expand=expand_text)
         else:
             d_x_text, d_y_text, q1 = [0]*len(texts), [0]*len(texts), (0, 0)
 
-        if text_from_points:
+        if avoid_points:
             d_x_points, d_y_points, q2 = repel_text_from_points(x, y, texts,
                                                    ax=ax, renderer=r,
                                                    expand=expand_points)
