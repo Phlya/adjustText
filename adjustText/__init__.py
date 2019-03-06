@@ -414,9 +414,9 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
     y : array_like
         y-coordinates of points to repel from; if not provided only uses text
         coordinates
-    add_objects : list
+    add_objects : list or PathCollection
         a list of additional matplotlib objects to avoid; they must have a
-        `.get_window_extent()` method.
+        `.get_window_extent()` method; alternatively, a PathCollection.
     ax : matplotlib axe, default is current axe (plt.gca())
         axe object with the plot
     expand_text : array_like, default (1.05, 1.2)
