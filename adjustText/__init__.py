@@ -5,6 +5,7 @@ from itertools import product
 import numpy as np
 from operator import itemgetter
 from matplotlib.path import get_path_collection_extents
+import matplotlib
 
 if sys.version_info >= (3, 0):
     xrange = range
@@ -58,6 +59,8 @@ def get_text_position(text, ax=None):
 def get_bboxes(objs, r, expand, ax):
     if ax is None:
         ax = plt.gca()
+    if all([isinstance(obj, matplotlib.transforms.BboxBase) for obj in objs]):
+        return objs
     try:
         return [i.get_window_extent(r).expanded(*expand).transformed(ax.\
                                           transData.inverted()) for i in objs]
@@ -416,7 +419,8 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
         coordinates
     add_objects : list or PathCollection
         a list of additional matplotlib objects to avoid; they must have a
-        `.get_window_extent()` method; alternatively, a PathCollection.
+        `.get_window_extent()` method; alternatively, a PathCollection or a
+        list of Bbox objects.
     ax : matplotlib axe, default is current axe (plt.gca())
         axe object with the plot
     expand_text : array_like, default (1.05, 1.2)
