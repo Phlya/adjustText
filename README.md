@@ -1,5 +1,7 @@
 <img src="https://github.com/Phlya/adjustText/blob/master/adjustText_logo.svg" width="183">
 
+Ryan Neff: This version includes an improvement over the current package, by converting from Axes coordinates to display coordinates to allow for any underlying plot type, including polar graphs and 3D plots.
+
 [![Documentation Status](https://readthedocs.org/projects/adjusttext/badge/?version=latest)](http://adjusttext.readthedocs.io/en/latest/?badge=latest)  [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/adjustText/Lobby)
 
 Inspired by **ggrepel** package for R/ggplot2 (https://github.com/slowkow/ggrepel) 
