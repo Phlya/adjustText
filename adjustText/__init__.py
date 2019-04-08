@@ -59,13 +59,15 @@ def get_text_position(text, ax=None):
 def get_bboxes(objs, r, expand, ax):
     if ax is None:
         ax = plt.gca()
-    if all([isinstance(obj, matplotlib.transforms.BboxBase) for obj in objs]):
-        return objs
     try:
         return [i.get_window_extent(r).expanded(*expand).transformed(ax.\
                                           transData.inverted()) for i in objs]
-    except TypeError:
-        return get_bboxes_pathcollection(objs, ax)
+    except (AttributeError, TypeError):
+        try:
+            if all([isinstance(obj, matplotlib.transforms.BboxBase) for obj in objs]):
+                return objs
+        except TypeError:
+            return get_bboxes_pathcollection(objs, ax)
 
 def get_midpoint(bbox):
     cx = (bbox.x0+bbox.x1)/2
