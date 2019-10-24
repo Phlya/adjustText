@@ -25,7 +25,7 @@ pip install adjustText
 ```
 Or with `conda`:
 ```
-conda install -c phlya adjusttext 
+conda install -c conda-forge adjusttext 
 ```
 
 For the latest version from github:
