@@ -433,7 +433,6 @@ def adjust_text(
     save_prefix="",
     save_format="png",
     add_step_numbers=True,
-   
     *args,
     **kwargs
 ):
