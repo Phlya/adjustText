@@ -66,6 +66,8 @@ def get_bboxes(objs, r, expand, ax):
         try:
             if all([isinstance(obj, matplotlib.transforms.BboxBase) for obj in objs]):
                 return objs
+            else:
+                raise ValueError('Something is wrong')
         except TypeError:
             return get_bboxes_pathcollection(objs, ax)
 

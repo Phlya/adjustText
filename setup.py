@@ -12,5 +12,5 @@ setup(name='adjustText',
       install_requires=['numpy', 'matplotlib'],
       classifiers=[
           'Framework :: Matplotlib',
-          'Topic :: Scientific/Engineering :: Visualization']
+          'Topic :: Scientific/Engineering :: Visualization'],
      )
