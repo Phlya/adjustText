@@ -9,5 +9,8 @@ setup(name='adjustText',
       author_email='flyamer@gmail.com',
       url='https://github.com/Phlya/adjustText',
       packages=['adjustText'],
-      install_requires=['numpy', 'matplotlib']
+      install_requires=['numpy', 'matplotlib'],
+      classifiers=[
+          'Framework :: Matplotlib',
+          'Topic :: Scientific/Engineering :: Visualization']
      )

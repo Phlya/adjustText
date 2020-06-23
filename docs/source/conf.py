@@ -48,7 +48,8 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'nbsphinx',
-    'sphinx.ext.mathjax'
+    'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -160,7 +161,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'adjustText', 'adjustText Documentation',
-     author, 'adjustText', 'One line description of project.',
+     author, 'adjustText', 'Auto adjust text for non-overlapping plot.',
      'Miscellaneous'),
 ]
 
