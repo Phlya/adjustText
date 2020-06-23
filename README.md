@@ -5,7 +5,6 @@
 [![DOI](https://zenodo.org/badge/49349828.svg)](https://zenodo.org/badge/latestdoi/49349828)
 [![PyPI version](https://badge.fury.io/py/adjustText.svg)](https://badge.fury.io/py/adjustText)
 
-
 # adjustText - automatic label placement for `matplotlib`
 
 Inspired by **ggrepel** package for R/ggplot2 (https://github.com/slowkow/ggrepel) 

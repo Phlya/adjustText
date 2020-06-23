@@ -53,8 +53,20 @@ def get_bboxes_pathcollection(sc, ax):
 def get_text_position(text, ax=None):
     ax = ax or plt.gca()
     x, y = text.get_position()
-    return (ax.xaxis.convert_units(x),
-            ax.yaxis.convert_units(y))
+    t_x,t_y = ax.transData.transform((x,y))
+    return (t_x,t_y)
+
+def set_text_position(text,t_x,t_y, ax=None):
+    ax = ax or plt.gca()
+    x,y = ax.transData.inverted().transform((t_x,t_y))
+    text.set_position((x,y))
+    return None
+
+def get_orig_coords(tupxy,ax=None):
+    ax = ax or plt.gca()
+    t_x,t_y = tupxy
+    x,y = ax.transData.inverted().transform((t_x,t_y))
+    return (x,y)
 
 def get_bboxes(objs, r, expand, ax):
     if ax is None:
@@ -113,16 +125,18 @@ def overlap_bbox_and_point(bbox, xp, yp):
     return dx, dy
 
 def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
-    if ax is None:
-        ax = plt.gca()
+    ax = ax or plt.gca()
     if bboxes is None:
         if renderer is None:
             r = get_renderer(ax.get_figure())
         else:
             r = renderer
         bboxes = get_bboxes(texts, r, (1, 1), ax=ax)
-    xmin, xmax = sorted(ax.get_xlim())
-    ymin, ymax = sorted(ax.get_ylim())
+    ax_bbox = ax.axesPatch.get_extents()
+    xmin = ax_bbox.xmin
+    xmax = ax_bbox.xmax
+    ymin = ax_bbox.ymin
+    ymax = ax_bbox.ymax
     for i, (text, dx, dy) in enumerate(zip(texts, delta_x, delta_y)):
         bbox = bboxes[i]
         x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
@@ -138,7 +152,7 @@ def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
         x, y = get_text_position(text, ax=ax)
         newx = x + dx
         newy = y + dy
-        text.set_position((newx, newy))
+        set_text_position(text,newx, newy)
 
 def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
                          renderer=None, ax=None,
@@ -153,8 +167,11 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
         r = get_renderer(ax.get_figure())
     else:
         r = renderer
-    xmin, xmax = sorted(ax.get_xlim())
-    ymin, ymax = sorted(ax.get_ylim())
+    ax_bbox = ax.axesPatch.get_extents()
+    xmin = ax_bbox.xmin
+    xmax = ax_bbox.xmax
+    ymin = ax_bbox.ymin
+    ymax = ax_bbox.ymax
     bboxes = get_bboxes(texts, r, expand, ax=ax)
     if 'x' not in direction:
         ha = ['']
@@ -176,15 +193,14 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
                 text.set_ha(h)
             if v:
                 text.set_va(v)
-            bbox = text.get_window_extent(r).expanded(*expand).\
-                                       transformed(ax.transData.inverted())
+            bbox = text.get_window_extent(r).expanded(*expand)
             c = len(get_points_inside_bbox(x, y, bbox))
             intersections = [bbox.intersection(bbox, bbox2) if i!=j else None
                              for j, bbox2 in enumerate(bboxes+add_bboxes) ]
             intersections = sum([abs(b.width*b.height) if b is not None else 0
                                  for b in intersections])
             # Check for out-of-axes position
-            bbox = text.get_window_extent(r).transformed(ax.transData.inverted())
+            bbox = text.get_window_extent(r)
             x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
             if x1 < xmin or x2 > xmax or y1 < ymin or y2 > ymax:
                 axout = 1
@@ -201,8 +217,7 @@ def optimally_align_text(x, y, texts, expand=(1., 1.), add_bboxes=[],
             text.set_ha(alignment[a][0])
         if 'y' in direction:
             text.set_va(alignment[a][1])
-        bboxes[i] = text.get_window_extent(r).expanded(*expand).\
-                                       transformed(ax.transData.inverted())
+        bboxes[i] = text.get_window_extent(r).expanded(*expand)
     return texts
 
 def repel_text(texts, renderer=None, ax=None, expand=(1.2, 1.2),
@@ -352,8 +367,11 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
         expand = (1, 1)
     if bboxes is None:
         bboxes = get_bboxes(texts, r, expand=expand, ax=ax)
-    xmin, xmax = sorted(ax.get_xlim())
-    ymin, ymax = sorted(ax.get_ylim())
+    ax_bbox = ax.axesPatch.get_extents()
+    xmin = ax_bbox.xmin
+    xmax = ax_bbox.xmax
+    ymin = ax_bbox.ymin
+    ymax = ax_bbox.ymax
     for i, bbox in enumerate(bboxes):
         x1, y1, x2, y2 = bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
         dx, dy = 0, 0
@@ -368,7 +386,7 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None,
         if dx or dy:
             x, y = get_text_position(texts[i], ax=ax)
             newx, newy = x + dx, y + dy
-            texts[i].set_position((newx, newy))
+            set_text_position(texts[i], newx, newy)
     return texts
 
 def float_to_tuple(a):
@@ -505,6 +523,11 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
     if ax is None:
         ax = plt.gca()
     r = get_renderer(ax.get_figure())
+    if (x is not None)&(y is not None):
+        for ix,tupxy in enumerate(zip(x,y)):
+            t_x,t_y = ax.transData.transform(tupxy)
+            x[ix] = t_x
+            y[ix] = t_y
     orig_xy = [get_text_position(text, ax=ax) for text in texts]
     orig_x = [xy[0] for xy in orig_xy]
     orig_y = [xy[1] for xy in orig_xy]
@@ -654,8 +677,8 @@ def adjust_text(texts, x=None, y=None, add_objects=None, ax=None,
             ap = {'patchA':text} # Ensure arrow is clipped by the text
             ap.update(kwap) # Add arrowprops from kwargs
             ax.annotate("", # Add an arrow from the text to the point
-                        xy = (orig_xy[j]),
-                        xytext=get_midpoint(bbox),
+                        xy = get_orig_coords(orig_xy[j]),
+                        xytext=get_orig_coords((get_midpoint(bbox))),
                         arrowprops=ap,
                         *args, **kwargs)
 
