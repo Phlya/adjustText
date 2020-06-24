@@ -11,12 +11,6 @@ from ._version import __version__
 if sys.version_info >= (3, 0):
     xrange = range
 
-def get_version(path):
-    with open(path, "r") as f:
-        version = f.read().strip()
-    return version
-
-
 def get_bboxes_pathcollection(sc, ax):
     """Function to return a list of bounding boxes in data coordinates
     for a scatter plot
