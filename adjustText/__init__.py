@@ -47,7 +47,7 @@ def get_bboxes_pathcollection(sc, ax):
             result = get_path_collection_extents(
                 transform.frozen(), [p], [t], [o], transOffset.frozen()
             )
-            bboxes.append(result.inverse_transformed(ax.transData))
+            bboxes.append(result)
 
     return bboxes
 
@@ -69,8 +69,32 @@ def get_orig_coords(transform, t_x, t_y):
     return (x, y)
 
 
-def get_bboxes(objs, r, expand, ax=None):
+def get_bboxes(objs, r=None, expand=(1, 1), ax=None, transform=None):
+    """
+    
+
+    Parameters
+    ----------
+    objs : list, or PathCollection
+        List of objects to get bboxes from. Also works with mpl PathCollection.
+    r : renderer
+        Renderer. The default is None, then automatically deduced from ax.
+    expand : (float, float), optional
+        How much to expand bboxes in (x, y), in fractions. The default is (1, 1).
+    ax : Axes, optional
+        The default is None, then uses current axes.
+    transform : optional
+        Transform to apply to the objects, if they don't return they window extent.
+        The default is None, then applies the default ax transform.
+
+    Returns
+    -------
+    list
+        List of bboxes.
+
+    """
     ax = ax or plt.gca()
+    r = r or get_renderer(ax.get_figure())
     try:
         return [i.get_window_extent(r).expanded(*expand) for i in objs]
     except (AttributeError, TypeError):
