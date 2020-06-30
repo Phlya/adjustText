@@ -5,7 +5,7 @@ from setuptools import setup
 def get_version(path):
     with open(path, "r") as f:
         _, version = f.read().strip().split("=")
-        version = version.strip()
+        version = version.strip([' ', '"'])
     return version
 
 setup(name='adjustText',
