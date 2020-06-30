@@ -6,6 +6,7 @@ import numpy as np
 from operator import itemgetter
 from matplotlib.path import get_path_collection_extents
 import matplotlib
+from ._version import __version__
 
 if sys.version_info >= (3, 0):
     xrange = range
