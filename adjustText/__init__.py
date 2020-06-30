@@ -8,12 +8,9 @@ from matplotlib.path import get_path_collection_extents
 import matplotlib
 from ._version import __version__
 
-if sys.version_info >= (3, 0):
-    xrange = range
-
 
 def get_bboxes_pathcollection(sc, ax):
-    """Function to return a list of bounding boxes in data coordinates
+    """Function to return a list of bounding boxes in display coordinates
     for a scatter plot
     Thank you to ImportanceOfBeingErnest
     https://stackoverflow.com/a/55007838/1304161"""
@@ -653,7 +650,7 @@ def adjust_text(
 
     texts = repel_text_from_axes(texts, ax, renderer=r, expand=expand_points)
     history = [(np.inf, np.inf)] * 10
-    for i in xrange(lim):
+    for i in range(lim):
         #        q1, q2 = [np.inf, np.inf], [np.inf, np.inf]
 
         if avoid_text:
