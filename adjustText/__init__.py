@@ -50,8 +50,10 @@ def get_bboxes_pathcollection(sc, ax):
     return bboxes
 
 
-def get_text_position(text):
+def get_text_position(text, ax):
     x, y = text.get_position()
+    x = ax.convert_xunits(x)
+    y = ax.convert_yunits(y)
     t_x, t_y = text.get_transform().transform((x, y))
     return (t_x, t_y)
 
@@ -172,7 +174,7 @@ def move_texts(texts, delta_x, delta_y, bboxes=None, renderer=None, ax=None):
         if y2 + dy > ymax:
             dy = 0
 
-        x, y = get_text_position(text)
+        x, y = get_text_position(text, ax)
         newx = x + dx
         newy = y + dy
         set_text_position(text, newx, newy)
@@ -410,7 +412,7 @@ def repel_text_from_axes(texts, ax=None, bboxes=None, renderer=None, expand=None
         if y2 > ymax:
             dy = ymax - y2
         if dx or dy:
-            x, y = get_text_position(texts[i])
+            x, y = get_text_position(texts[i], ax)
             newx, newy = x + dx, y + dy
             set_text_position(texts[i], newx, newy)
     return texts
@@ -570,7 +572,7 @@ def adjust_text(
             t_x, t_y = transform.transform(tupxy)
             x[ix] = t_x
             y[ix] = t_y
-    orig_xy = [get_text_position(text) for text in texts]
+    orig_xy = [get_text_position(text, ax) for text in texts]
     orig_x = [xy[0] for xy in orig_xy]
     orig_y = [xy[1] for xy in orig_xy]
     force_objects = float_to_tuple(force_objects)
