@@ -55,6 +55,9 @@ examples/.ipynb_checkpoints/
 # PyBuilder
 target/
 
+# IDE files
+.idea/
+
 *~
 .spyderworkspace
 adjustText/.spyderworkspace
