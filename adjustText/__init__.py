@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, annotations
 import sys
 from matplotlib import pyplot as plt
 from itertools import product
@@ -437,16 +437,16 @@ def adjust_text(
     y=None,
     add_objects=None,
     ax=None,
-    expand_text=(1.05, 1.2),
-    expand_points=(1.05, 1.2),
-    expand_objects=(1.05, 1.2),
-    expand_align=(1.05, 1.2),
+    expand_text: float | tuple[float, float] = (1.05, 1.2),
+    expand_points: float | tuple[float, float] = (1.05, 1.2),
+    expand_objects: float | tuple[float, float] = (1.05, 1.2),
+    expand_align: float | tuple[float, float] = (1.05, 1.2),
     autoalign="xy",
     va="center",
     ha="center",
-    force_text=(0.1, 0.25),
-    force_points=(0.2, 0.5),
-    force_objects=(0.1, 0.25),
+    force_text: float | tuple[float, float] = (0.1, 0.25),
+    force_points: float | tuple[float, float] = (0.2, 0.5),
+    force_objects: float | tuple[float, float] = (0.1, 0.25),
     lim=500,
     precision=0.01,
     only_move={"points": "xy", "text": "xy", "objects": "xy"},
@@ -506,14 +506,12 @@ def adjust_text(
         bounding box of texts when autoaligning texts.
     autoalign: str or boolean {'xy', 'x', 'y', True, False}, default 'xy'
         Direction in wich the best alignement will be determined
-
         - 'xy' or True, best alignment of all texts determined in all
           directions automatically before running the iterative adjustment
           (overriding va and ha),
         - 'x', will only align horizontally,
         - 'y', will only align vertically,
         - False, do nothing (i.e. preserve va and ha)
-
     va : str, default 'center'
         vertical alignment of texts
     ha : str, default 'center'
