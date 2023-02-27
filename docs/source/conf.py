@@ -67,6 +67,8 @@ MOCK_MODULES = [
     "scipy",
     "scipy.spatial",
     "scipy.spatial.distance",
+    "matplotlib",
+    "matplotlib.pyplot",
 ]
 
 for mod_name in MOCK_MODULES:
