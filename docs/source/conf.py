@@ -1,10 +1,11 @@
 import sys
 import os
-import matplotlib
+
+# import matplotlib
 import mock
 
 sys.path.insert(0, os.path.abspath("../.."))
-matplotlib.use("Agg")
+# matplotlib.use("Agg")
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
