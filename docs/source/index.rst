@@ -16,12 +16,12 @@ The repository with the issue tracker can be found here: https://github.com/Phly
    Examples-for-multiple-subplots.ipynb
 
 
-Indices and tables
-==================
+.. Indices and tables
+.. ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
 
 Module documentation
 ====================
