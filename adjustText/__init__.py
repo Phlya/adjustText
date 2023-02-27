@@ -242,7 +242,7 @@ def adjust_text(
     explode_radius="auto",
     ensure_inside_axes=True,
     expand_axes=False,
-    only_move={"text": "xy", "static": "xy", "explode": "xy"},
+    only_move={"text": "xy", "static": "xy", "explode": "xy", "pull": "xy"},
     ax=None,
     min_arrow_len=5,
     time_lim=0.1,
@@ -251,18 +251,27 @@ def adjust_text(
 ):
     if ax is None:
         ax = plt.gca()
-    plt.draw()
-
+    ax.figure.draw_without_rendering()
+    try:
+        transform = texts[0].get_transform()
+    except IndexError:
+        logging.warn(
+            "Something wrong with the texts. Did you pass a list of matplotlib text objects?"
+        )
+        return
     start_time = timer()
-
-    transform = texts[0].get_transform()
 
     orig_xy = [text.get_unitless_position() for text in texts]
     orig_xy_disp_coord = transform.transform(orig_xy)
     coords = get_2d_coordinates(texts)
 
     if isinstance(only_move, str):
-        only_move = {"text": only_move, "static": only_move, "explode": only_move}
+        only_move = {
+            "text": only_move,
+            "static": only_move,
+            "explode": only_move,
+            "pull": only_move,
+        }
 
     # coords += np.random.rand(*coords.shape)*1e-6
     if x is not None and y is not None:
@@ -337,13 +346,9 @@ def adjust_text(
         text_shifts_y *= force_text[1]
         static_shifts_x *= force_static[0]
         static_shifts_y *= force_static[1]
-        pull_x *= force_pull[0]
-        pull_y *= force_pull[1]
-
-        if not any(["x" in val for val in only_move.values()]):
-            pull_x = np.zeros_like(pull_x)
-        if not any(["y" in val for val in only_move.values()]):
-            pull_y = np.zeros_like(pull_y)
+        # Pull is in the opposite direction, so need to negate it
+        pull_x *= -force_pull[0]
+        pull_y *= -force_pull[1]
 
         if only_move:
             if "x" not in only_move["text"]:
@@ -374,8 +379,22 @@ def adjust_text(
             elif "y-" in only_move["static"]:
                 static_shifts_y[static_shifts_y < 0] = 0
 
-        shifts_x = text_shifts_x + static_shifts_x - pull_x
-        shifts_y = text_shifts_y + static_shifts_y - pull_y
+            if "x" not in only_move["pull"]:
+                pull_x = np.zeros_like(pull_x)
+            elif "x+" in only_move["pull"]:
+                pull_x[pull_x > 0] = 0
+            elif "x-" in only_move["pull"]:
+                pull_x[pull_x < 0] = 0
+
+            if "y" not in only_move["pull"]:
+                pull_y = np.zeros_like(pull_y)
+            elif "y+" in only_move["pull"]:
+                pull_y[pull_y > 0] = 0
+            elif "y-" in only_move["pull"]:
+                pull_y[pull_y < 0] = 0
+
+        shifts_x = text_shifts_x + static_shifts_x + pull_x
+        shifts_y = text_shifts_y + static_shifts_y + pull_y
 
         coords = apply_shifts(coords, shifts_x, shifts_y)
         if ensure_inside_axes:
@@ -420,6 +439,6 @@ def adjust_text(
 
         if ap and display_dists[i] >= min_arrow_len:
             arrowpatch = FancyArrowPatch(
-                posB=text_mid, posA=target, patchB=text, *args, **kwargs, **ap
+                posA=text_mid, posB=target, patchA=text, *args, **kwargs, **ap
             )
             ax.add_patch(arrowpatch)
