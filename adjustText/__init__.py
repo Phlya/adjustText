@@ -320,6 +320,8 @@ def adjust_text(
         optimization is done just for plotting the connecting arrows if
         required.
     """
+    if not texts:
+        return
     if ax is None:
         ax = plt.gca()
     ax.figure.draw_without_rendering()
