@@ -11,6 +11,5 @@ sphinx:
    configuration: docs/conf.py
 
 python:
-   setup_py_install: false
    install:
    - requirements: docs/requirements.txt
