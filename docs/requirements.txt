@@ -1,4 +1,4 @@
-sphinx>=1.4
+sphinx>=6
 ipykernel
 nbsphinx
 numpy
