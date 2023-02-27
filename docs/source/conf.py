@@ -31,16 +31,16 @@ copyright = "2018, Ilya Flyamer"
 author = "Ilya Flyamer"
 
 # The short X.Y version
-version = ""
+version = "1.0beta"
 # The full version, including alpha/beta/rc tags
-def get_version(path):
-    with open(path, "r") as f:
-        _, version = f.read().strip().split("=")
-        version = version.strip().strip('"')
-    return version
+# def get_version(path):
+#     with open(path, "r") as f:
+#         _, version = f.read().strip().split("=")
+#         version = version.strip().strip('"')
+#     return version
 
 
-release = get_version("../_version.py")
+# release = get_version("../_version.py")
 
 # -- General configuration ---------------------------------------------------
 
