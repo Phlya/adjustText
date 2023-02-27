@@ -71,7 +71,7 @@ def get_orig_coords(transform, t_x, t_y):
 
 def get_bboxes(objs, r=None, expand=(1, 1), ax=None, transform=None):
     """
-    
+
 
     Parameters
     ----------
@@ -561,8 +561,10 @@ def adjust_text(
     int
         Number of iteration
     """
-    plt.draw()
+    if not texts:
+        return 0
     ax = ax or plt.gca()
+    ax.figure.draw_without_rendering()
     r = get_renderer(ax.get_figure())
     transform = texts[0].get_transform()
     if (x is not None) & (y is not None):
