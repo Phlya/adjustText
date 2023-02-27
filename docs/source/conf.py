@@ -40,7 +40,7 @@ def get_version(path):
     return version
 
 
-release = get_version("_version.py")
+release = get_version("../_version.py")
 
 # -- General configuration ---------------------------------------------------
 
