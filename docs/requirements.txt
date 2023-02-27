@@ -1,5 +1,3 @@
 sphinx>=6
 ipykernel
 nbsphinx
-numpy
-matplotlib

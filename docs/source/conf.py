@@ -69,6 +69,10 @@ MOCK_MODULES = [
     "scipy.spatial.distance",
     "matplotlib",
     "matplotlib.pyplot",
+    "matplotlib.patches",
+    "matplotlib.patches.FancyArrowPatch",
+    "matplotlib.path",
+    "matplotlib.path.get_path_collection_extents",
 ]
 
 for mod_name in MOCK_MODULES:
