@@ -237,7 +237,7 @@ def adjust_text(
     force_text: tuple[float, float] = (0.1, 0.2),
     force_static: tuple[float, float] = (0.05, 0.1),
     force_pull: tuple[float, float] = (0.01, 0.001),
-    explode_force: tuple[float, float] = (0.01, 0.01),
+    force_explode: tuple[float, float] = (0.01, 0.01),
     expand: tuple[float, float] = (1.05, 1.1),
     explode_radius="auto",
     ensure_inside_axes=True,
@@ -249,6 +249,77 @@ def adjust_text(
     *args,
     **kwargs,
 ):
+    """Iteratively adjusts the locations of texts.
+
+    Call adjust_text the very last, after all plotting (especially
+    anything that can change the axes limits) has been done. This is
+    because to move texts the function needs to use the dimensions of
+    the axes, and without knowing the final size of the plots the
+    results will be completely nonsensical, or suboptimal.
+
+    First moves all texts that are outside the axes limits
+    inside. Then in each iteration moves all texts away from each
+    other and from points. In the end hides texts and substitutes them
+    with annotations to link them to the respective points.
+
+    Parameters
+    ----------
+    texts : list
+        A list of :obj:`matplotlib.text.Text` objects to adjust.
+
+    Other Parameters
+    ----------------
+    x : array_like
+        x-coordinates of points to repel from; if not provided only uses text
+        coordinates.
+    y : array_like
+        y-coordinates of points to repel from; if not provided only uses text
+        coordinates
+    objects : list or PathCollection
+        a list of additional matplotlib objects to avoid; they must have a
+        `.get_window_extent()` method; alternatively, a PathCollection or a
+        list of Bbox objects.
+    avoid_self : bool, default True
+        whether to repel texts from its original positions.
+    force_text : tuple, default (0.1, 0.2)
+        the repel force from texts is multiplied by this value
+    force_static : tuple, default (0.05, 0.1)
+        the repel force from points and objects is multiplied by this value
+    force_pull : float, default (0.001, 0.0001)
+        same as other forces, but for pulling textx back to original positions
+    force_explode : float, default (0.001, 0.0001)
+        same as other forces, but for the forced move of texts away from nearby texts
+        and static positions before iterative adjustment
+    expand : array_like, default (1.05, 1.2)
+        a tuple/list/... with 2 multipliers (x, y) by which to expand the
+        bounding box of texts when repelling them from each other.
+    explode_radius : float or "auto", default "auto"
+        how far to check for nearest objects to move the texts away in the beginning
+        in display units, so on the order of 100 is the typical value
+        "auto" uses the size of the largest text
+    ensure_inside_axes : bool, default True
+        Whether to force texts to stay inside the axes
+    expand_axes : bool, default False
+        Whether to expand the axes to fit all texts before adjusting there positions
+    only_move : dict, default {'points':'xy', 'text':'xy', 'objects':'xy'}
+        a dict to restrict movement of texts to only certain axes for certain
+        types of overlaps.
+        Valid keys are 'points', 'text', and 'objects'.
+        Valid values are '', 'x', 'y', and 'xy'.
+        For example, only_move={'points':'y', 'text':'xy', 'objects':'xy'}
+        forbids moving texts along the x axis due to overlaps with points.
+    ax : matplotlib axe, default is current axe (plt.gca())
+        ax object with the plot
+    min_arrow_len : float, default 5
+        If the text is closer than this to the target point, don't add an arrow
+        (in display units)
+    time_lim : float, defaul 0.1
+        How much time to allow for the adjustments, in seconds
+    args and kwargs :
+        any arguments will be fed into obj:`FancyArrowPatch` after all the
+        optimization is done just for plotting the connecting arrows if
+        required.
+    """
     if ax is None:
         ax = plt.gca()
     ax.figure.draw_without_rendering()
@@ -300,14 +371,14 @@ def adjust_text(
         explode_radius = max(
             (coords[:, 1] - coords[:, 0]).max(), (coords[:, 3] - coords[:, 2]).max()
         )
-    if explode_radius > 0 and np.all(np.asarray(explode_force) > 0):
+    if explode_radius > 0 and np.all(np.asarray(force_explode) > 0):
         explode_x, explode_y = explode(coords, static_coords, explode_radius)
         if "x" not in only_move["explode"]:
             explode_x = np.zeros_like(explode_x)
         if "y" not in only_move["explode"]:
             explode_y = np.zeros_like(explode_y)
         coords = apply_shifts(
-            coords, -explode_x * explode_force[0], -explode_y * explode_force[1]
+            coords, -explode_x * force_explode[0], -explode_y * force_explode[1]
         )
 
     error = np.Inf
