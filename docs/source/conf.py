@@ -1,6 +1,7 @@
 import sys
 import os
 import matplotlib
+import mock
 
 sys.path.insert(0, os.path.abspath("../.."))
 matplotlib.use("Agg")
@@ -38,7 +39,6 @@ def get_version(path):
         version = version.strip().strip('"')
     return version
 
-
 release = get_version("../../_version.py")
 
 # -- General configuration ---------------------------------------------------
@@ -58,6 +58,20 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
 ]
+
+
+MOCK_MODULES = [
+    "bioframe",
+    "numpy",
+    "scipy",
+    "scipy.spatial",
+    "scipy.spatial.distance",
+]
+
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
+
+autodoc_mock_imports = MOCK_MODULES
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
