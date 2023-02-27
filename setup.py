@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+from pathlib import Path
 from setuptools import setup
 
 def get_version(path):
@@ -18,10 +19,15 @@ setup(name='adjustText',
       author='Ilya Flyamer',
       author_email='flyamer@gmail.com',
       url='https://github.com/Phlya/adjustText',
+      project_urls={
+          'Documentation': 'https://adjusttext.readthedocs.io/',
+      },
       packages=['adjustText'],
       install_requires=['numpy', 'matplotlib'],
       include_package_data=True,
-
+      long_description=Path("README.md").read_text(encoding="utf-8"),
+      long_description_content_type="text/markdown",
+      license="MIT",
       classifiers=[
           'Framework :: Matplotlib',
           'Topic :: Scientific/Engineering :: Visualization'],
