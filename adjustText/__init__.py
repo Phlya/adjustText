@@ -186,10 +186,7 @@ def apply_shifts(coords, shifts_x, shifts_y):
 
 
 def force_into_bbox(coords, bbox):
-    xmin = bbox.xmin
-    xmax = bbox.xmax
-    ymin = bbox.ymin
-    ymax = bbox.ymax
+    xmin, xmax, ymin, ymax = bbox
     dx, dy = np.zeros((coords.shape[0])), np.zeros((coords.shape[0]))
     if np.any((coords[:, 0] < xmin) & (coords[:, 1] > xmax)):
         logging.warn("Some labels are too long, can't fit inside the X axis")
@@ -228,6 +225,95 @@ def explode(coords, static_coords, r=None):
     return xshifts, yshifts
 
 
+def iterate(
+    coords,
+    orig_coords,
+    static_coords=None,
+    force_text: tuple[float, float] = (0.1, 0.2),
+    force_static: tuple[float, float] = (0.05, 0.1),
+    force_pull: tuple[float, float] = (0.05, 0.1),
+    expand: tuple[float, float] = (1.05, 1.1),
+    bbox_to_contain=False,
+    only_move={"text": "xy", "static": "xy", "explode": "xy", "pull": "xy"},
+):
+
+    text_shifts_x, text_shifts_y = get_shifts_texts(
+        expand_coords(coords, expand[0], expand[1])
+    )
+    if static_coords.shape[0] > 0:
+        static_shifts_x, static_shifts_y = get_shifts_extra(
+            expand_coords(coords, expand[0], expand[1]), static_coords
+        )
+    else:
+        static_shifts_x, static_shifts_y = np.zeros((1)), np.zeros((1))
+    error_x = np.abs(text_shifts_x) + np.abs(static_shifts_x)
+    error_y = np.abs(text_shifts_y) + np.abs(static_shifts_y)
+    error = np.sum(np.append(error_x, error_y))
+
+    pull_x, pull_y = pull_back(coords, orig_coords)
+
+    text_shifts_x *= force_text[0]
+    text_shifts_y *= force_text[1]
+    static_shifts_x *= force_static[0]
+    static_shifts_y *= force_static[1]
+    # Pull is in the opposite direction, so need to negate it
+    pull_x *= -force_pull[0]
+    pull_y *= -force_pull[1]
+    # pull_x[error_x != 0] = 0
+    # pull_y[error_y != 0] = 0
+
+    if only_move:
+        if "x" not in only_move["text"]:
+            text_shifts_x = np.zeros_like(text_shifts_x)
+        elif "x+" in only_move["text"]:
+            text_shifts_x[text_shifts_x > 0] = 0
+        elif "x-" in only_move["text"]:
+            text_shifts_x[text_shifts_x < 0] = 0
+
+        if "y" not in only_move["text"]:
+            text_shifts_y = np.zeros_like(text_shifts_y)
+        elif "y+" in only_move["text"]:
+            text_shifts_y[text_shifts_y > 0] = 0
+        elif "y-" in only_move["text"]:
+            text_shifts_y[text_shifts_y < 0] = 0
+
+        if "x" not in only_move["static"]:
+            static_shifts_x = np.zeros_like(static_shifts_x)
+        elif "x+" in only_move["static"]:
+            static_shifts_x[static_shifts_x > 0] = 0
+        elif "x-" in only_move["static"]:
+            static_shifts_x[static_shifts_x < 0] = 0
+
+        if "y" not in only_move["static"]:
+            static_shifts_y = np.zeros_like(static_shifts_y)
+        elif "y+" in only_move["static"]:
+            static_shifts_y[static_shifts_y > 0] = 0
+        elif "y-" in only_move["static"]:
+            static_shifts_y[static_shifts_y < 0] = 0
+
+        if "x" not in only_move["pull"]:
+            pull_x = np.zeros_like(pull_x)
+        elif "x+" in only_move["pull"]:
+            pull_x[pull_x > 0] = 0
+        elif "x-" in only_move["pull"]:
+            pull_x[pull_x < 0] = 0
+
+        if "y" not in only_move["pull"]:
+            pull_y = np.zeros_like(pull_y)
+        elif "y+" in only_move["pull"]:
+            pull_y[pull_y > 0] = 0
+        elif "y-" in only_move["pull"]:
+            pull_y[pull_y < 0] = 0
+
+    shifts_x = text_shifts_x + static_shifts_x + pull_x
+    shifts_y = text_shifts_y + static_shifts_y + pull_y
+
+    coords = apply_shifts(coords, shifts_x, shifts_y)
+    if bbox_to_contain:
+        coords = force_into_bbox(coords, bbox_to_contain)
+    return coords, error
+
+
 def adjust_text(
     texts,
     x=None,
@@ -235,9 +321,9 @@ def adjust_text(
     objects=None,
     avoid_self=True,
     force_text: tuple[float, float] = (0.1, 0.2),
-    force_static: tuple[float, float] = (0.05, 0.1),
-    force_pull: tuple[float, float] = (0.01, 0.001),
-    force_explode: tuple[float, float] = (0.01, 0.01),
+    force_static: tuple[float, float] = (0.1, 0.2),
+    force_pull: tuple[float, float] = (0.01, 0.01),
+    force_explode: tuple[float, float] = (0.01, 0.02),
     expand: tuple[float, float] = (1.05, 1.1),
     explode_radius="auto",
     ensure_inside_axes=True,
@@ -245,7 +331,7 @@ def adjust_text(
     only_move={"text": "xy", "static": "xy", "explode": "xy", "pull": "xy"},
     ax=None,
     min_arrow_len=5,
-    time_lim=0.1,
+    time_lim=0.5,
     *args,
     **kwargs,
 ):
@@ -393,85 +479,29 @@ def adjust_text(
 
     # expands = list(zip(np.linspace(expand_start[0], expand_end[0], expand_steps),
     #                 np.linspace(expand_start[1], expand_end[1], expand_steps)))
-    ax_bbox = ax.patch.get_extents()
 
     if expand_axes:
         expand_axes_to_fit(coords, ax, transform)
+    if ensure_inside_axes:
+        ax_bbox = ax.patch.get_extents()
+        ax_bbox = ax_bbox.xmin, ax_bbox.xmax, ax_bbox.ymin, ax_bbox.ymax
+    else:
+        ax_bbox = False
 
     # i = 0
     while error > 0:
         # expand = expands[min(i, expand_steps-1)]
-        text_shifts_x, text_shifts_y = get_shifts_texts(
-            expand_coords(coords, expand[0], expand[1])
+        coords, error = iterate(
+            coords,
+            orig_xy_disp_coord,
+            static_coords,
+            force_text=force_text,
+            force_static=force_static,
+            force_pull=force_pull,
+            expand=expand,
+            bbox_to_contain=ax_bbox,
+            only_move=only_move,
         )
-        if static_coords.shape[0] > 0:
-            static_shifts_x, static_shifts_y = get_shifts_extra(
-                expand_coords(coords, expand[0], expand[1]), static_coords
-            )
-        else:
-            static_shifts_x, static_shifts_y = np.zeros((1)), np.zeros((1))
-        error_x = np.abs(text_shifts_x) + np.abs(static_shifts_x)
-        error_y = np.abs(text_shifts_y) + np.abs(static_shifts_y)
-        error = np.sum(np.append(error_x, error_y))
-        pull_x, pull_y = pull_back(coords, orig_xy_disp_coord)
-
-        text_shifts_x *= force_text[0]
-        text_shifts_y *= force_text[1]
-        static_shifts_x *= force_static[0]
-        static_shifts_y *= force_static[1]
-        # Pull is in the opposite direction, so need to negate it
-        pull_x *= -force_pull[0]
-        pull_y *= -force_pull[1]
-
-        if only_move:
-            if "x" not in only_move["text"]:
-                text_shifts_x = np.zeros_like(text_shifts_x)
-            elif "x+" in only_move["text"]:
-                text_shifts_x[text_shifts_x > 0] = 0
-            elif "x-" in only_move["text"]:
-                text_shifts_x[text_shifts_x < 0] = 0
-
-            if "y" not in only_move["text"]:
-                text_shifts_y = np.zeros_like(text_shifts_y)
-            elif "y+" in only_move["text"]:
-                text_shifts_y[text_shifts_y > 0] = 0
-            elif "y-" in only_move["text"]:
-                text_shifts_y[text_shifts_y < 0] = 0
-
-            if "x" not in only_move["static"]:
-                static_shifts_x = np.zeros_like(static_shifts_x)
-            elif "x+" in only_move["static"]:
-                static_shifts_x[static_shifts_x > 0] = 0
-            elif "x-" in only_move["static"]:
-                static_shifts_x[static_shifts_x < 0] = 0
-
-            if "y" not in only_move["static"]:
-                static_shifts_y = np.zeros_like(static_shifts_y)
-            elif "y+" in only_move["static"]:
-                static_shifts_y[static_shifts_y > 0] = 0
-            elif "y-" in only_move["static"]:
-                static_shifts_y[static_shifts_y < 0] = 0
-
-            if "x" not in only_move["pull"]:
-                pull_x = np.zeros_like(pull_x)
-            elif "x+" in only_move["pull"]:
-                pull_x[pull_x > 0] = 0
-            elif "x-" in only_move["pull"]:
-                pull_x[pull_x < 0] = 0
-
-            if "y" not in only_move["pull"]:
-                pull_y = np.zeros_like(pull_y)
-            elif "y+" in only_move["pull"]:
-                pull_y[pull_y > 0] = 0
-            elif "y-" in only_move["pull"]:
-                pull_y[pull_y < 0] = 0
-
-        shifts_x = text_shifts_x + static_shifts_x + pull_x
-        shifts_y = text_shifts_y + static_shifts_y + pull_y
-
-        coords = apply_shifts(coords, shifts_x, shifts_y)
-        if ensure_inside_axes:
-            coords = force_into_bbox(coords, ax_bbox)
 
         if timer() - start_time > time_lim:
             break
