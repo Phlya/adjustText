@@ -410,7 +410,15 @@ def adjust_text(
         return
     if ax is None:
         ax = plt.gca()
-    ax.figure.draw_without_rendering()
+    try:
+        ax.figure.draw_without_rendering()
+    except AttributeError:
+        logging.warn(
+            """Looks like you are using an old matplotlib version.
+               In some cases adjust_text might fail, if possible update
+               matplotlib to version >=3.5.0"""
+        )
+        ax.figure.canvas.draw()
     try:
         transform = texts[0].get_transform()
     except IndexError:
