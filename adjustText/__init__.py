@@ -8,15 +8,39 @@ import bioframe as bf
 import scipy.spatial.distance
 import logging
 from timeit import default_timer as timer
+import io
+
+try:
+    from matplotlib.backend_bases import _get_renderer as matplot_get_renderer
+except ImportError:
+    matplot_get_renderer = None
 
 from ._version import __version__
 
 
 def get_renderer(fig):
-    try:
+    # If the backend support get_renderer() or renderer, use that.
+    if hasattr(fig.canvas, "get_renderer"):
         return fig.canvas.get_renderer()
-    except AttributeError:
+    
+    if hasattr(fig.canvas, "renderer"):
         return fig.canvas.renderer
+    
+    # Otherwise, if we have the matplotlib function available, use that.
+    if matplot_get_renderer:
+        return matplot_get_renderer(fig)
+    
+    # No dice, try and guess.
+    # Write the figure to a temp location, and then retrieve whichever
+    # render was used (doesn't work in all matplotlib versions).
+    fig.canvas.print_figure(io.BytesIO())
+    try:
+        return fig._cachedRenderer
+        
+    except AttributeError:
+        # No luck.
+        # We're out of options.
+        raise ValueError("Unable to determine renderer") from None
 
 
 def get_bboxes_pathcollection(sc, ax):
