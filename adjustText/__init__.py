@@ -393,14 +393,14 @@ def adjust_text(
         whether to repel texts from its original positions.
     force_text : tuple, default (0.1, 0.2)
         the repel force from texts is multiplied by this value
-    force_static : tuple, default (0.05, 0.1)
+    force_static : tuple, default (0.1, 0.2)
         the repel force from points and objects is multiplied by this value
-    force_pull : float, default (0.001, 0.0001)
-        same as other forces, but for pulling textx back to original positions
-    force_explode : float, default (0.001, 0.0001)
+    force_pull : tuple, default (0.01, 0.01)
+        same as other forces, but for pulling texts back to original positions
+    force_explode : float, default (0.01, 0.02)
         same as other forces, but for the forced move of texts away from nearby texts
         and static positions before iterative adjustment
-    expand : array_like, default (1.05, 1.2)
+    expand : array_like, default (1.05, 1.1)
         a tuple/list/... with 2 multipliers (x, y) by which to expand the
         bounding box of texts when repelling them from each other.
     explode_radius : float or "auto", default "auto"
@@ -411,19 +411,17 @@ def adjust_text(
         Whether to force texts to stay inside the axes
     expand_axes : bool, default False
         Whether to expand the axes to fit all texts before adjusting there positions
-    only_move : dict, default {'points':'xy', 'text':'xy', 'objects':'xy'}
+    only_move : dict, default {"text": "xy", "static": "xy", "explode": "xy", "pull": "xy"}
         a dict to restrict movement of texts to only certain axes for certain
         types of overlaps.
-        Valid keys are 'points', 'text', and 'objects'.
+        Valid keys are 'text', 'static', 'explode' and 'pull'.
         Valid values are '', 'x', 'y', and 'xy'.
-        For example, only_move={'points':'y', 'text':'xy', 'objects':'xy'}
-        forbids moving texts along the x axis due to overlaps with points.
     ax : matplotlib axe, default is current axe (plt.gca())
         ax object with the plot
     min_arrow_len : float, default 5
         If the text is closer than this to the target point, don't add an arrow
         (in display units)
-    time_lim : float, defaul 0.1
+    time_lim : float, defaul 0.5
         How much time to allow for the adjustments, in seconds
     args and kwargs :
         any arguments will be fed into obj:`FancyArrowPatch` after all the
