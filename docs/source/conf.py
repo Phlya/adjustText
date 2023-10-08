@@ -2,7 +2,7 @@ import sys
 import os
 
 # import matplotlib
-import mock
+from unittest import mock
 
 sys.path.insert(0, os.path.abspath("../.."))
 # matplotlib.use("Agg")
