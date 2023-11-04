@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import os
-from pathlib import Path
 from setuptools import setup
 
 
@@ -9,6 +8,9 @@ def get_version(path):
         _, version = f.read().strip().split("=")
         version = version.strip().strip('"')
     return version
+
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
 setup(name='adjustText',
@@ -27,7 +29,7 @@ setup(name='adjustText',
       packages=['adjustText'],
       install_requires=["numpy", "matplotlib", "bioframe", "scipy"],
       include_package_data=True,
-      long_description=Path("README.md").read_text(encoding="utf-8"),
+      long_description=read("README.md"),
       long_description_content_type="text/markdown",
       license="MIT",
       classifiers=[
