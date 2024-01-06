@@ -355,7 +355,8 @@ def adjust_text(
     only_move={"text": "xy", "static": "xy", "explode": "xy", "pull": "xy"},
     ax=None,
     min_arrow_len=5,
-    time_lim=0.5,
+    time_lim: float | None = None,
+    iter_lim: int | None = None,
     *args,
     **kwargs,
 ):
@@ -421,8 +422,14 @@ def adjust_text(
     min_arrow_len : float, default 5
         If the text is closer than this to the target point, don't add an arrow
         (in display units)
-    time_lim : float, defaul 0.5
-        How much time to allow for the adjustments, in seconds
+    time_lim : float, default None
+        How much time to allow for the adjustments, in seconds.
+        If both `time_lim` and iter_lim are set, faster will be used.
+        If both are None, `time_lim` is set to 0.5 seconds.
+    iter_lim : int, default None
+        How many iterations to allow for the adjustments.
+        If both `time_lim` and iter_lim are set, faster will be used.
+        If both are None, `time_lim` is set to 0.5 seconds.
     args and kwargs :
         any arguments will be fed into obj:`FancyArrowPatch` after all the
         optimization is done just for plotting the connecting arrows if
@@ -448,6 +455,10 @@ def adjust_text(
             "Something wrong with the texts. Did you pass a list of matplotlib text objects?"
         )
         return
+    if time_lim is None and iter_lim is None:
+        time_lim = 0.5
+    elif time_lim is not None and iter_lim is not None:
+        logging.warn("Both time_lim and iter_lim are set, faster will be used")
     start_time = timer()
 
     orig_xy = [text.get_unitless_position() for text in texts]
@@ -518,7 +529,7 @@ def adjust_text(
     else:
         ax_bbox = False
 
-    # i = 0
+    i = 0
     while error > 0:
         # expand = expands[min(i, expand_steps-1)]
         coords, error = iterate(
@@ -533,7 +544,10 @@ def adjust_text(
             only_move=only_move,
         )
 
-        if timer() - start_time > time_lim:
+        i += 1
+        if time_lim is not None and timer() - start_time > time_lim:
+            break
+        if iter_lim is not None and i == iter_lim:
             break
 
     xdists = np.min(
