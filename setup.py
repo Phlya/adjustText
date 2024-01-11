@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 from setuptools import setup
-
+import io
 
 def get_version(path):
     with open(path, "r") as f:
@@ -12,6 +12,14 @@ def get_version(path):
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+def _read(*parts, **kwargs):
+    filepath = os.path.join(os.path.dirname(__file__), *parts)
+    encoding = kwargs.pop("encoding", "utf-8")
+    with io.open(filepath, encoding=encoding) as fh:
+        text = fh.read()
+    return text
+
+install_requires = [l for l in _read("requirements.txt").split("\n") if l]
 
 setup(name='adjustText',
       version=get_version(os.path.join(
@@ -27,7 +35,7 @@ setup(name='adjustText',
           'Documentation': 'https://adjusttext.readthedocs.io/',
       },
       packages=['adjustText'],
-      install_requires=["numpy", "matplotlib", "bioframe", "scipy"],
+      install_requires=install_requires,
       include_package_data=True,
       long_description=read("README.md"),
       long_description_content_type="text/markdown",

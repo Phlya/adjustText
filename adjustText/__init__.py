@@ -4,7 +4,6 @@ import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.patches import FancyArrowPatch
 from matplotlib.path import get_path_collection_extents
-import bioframe as bf
 import scipy.spatial.distance
 import logging
 from timeit import default_timer as timer
@@ -15,6 +14,7 @@ try:
 except ImportError:
     matplot_get_renderer = None
 
+from .arrops import overlap_intervals
 from ._version import __version__
 
 
@@ -140,11 +140,11 @@ def get_2d_coordinates(objs):
 
 def get_shifts_texts(coords):
     N = coords.shape[0]
-    xoverlaps = bf.core.arrops.overlap_intervals(
+    xoverlaps = overlap_intervals(
         coords[:, 0], coords[:, 1], coords[:, 0], coords[:, 1]
     )
     xoverlaps = xoverlaps[xoverlaps[:, 0] != xoverlaps[:, 1]]
-    yoverlaps = bf.core.arrops.overlap_intervals(
+    yoverlaps = overlap_intervals(
         coords[:, 2], coords[:, 3], coords[:, 2], coords[:, 3]
     )
     yoverlaps = yoverlaps[yoverlaps[:, 0] != yoverlaps[:, 1]]
@@ -162,10 +162,10 @@ def get_shifts_texts(coords):
 def get_shifts_extra(coords, extra_coords):
     N = coords.shape[0]
 
-    xoverlaps = bf.core.arrops.overlap_intervals(
+    xoverlaps = overlap_intervals(
         coords[:, 0], coords[:, 1], extra_coords[:, 0], extra_coords[:, 1]
     )
-    yoverlaps = bf.core.arrops.overlap_intervals(
+    yoverlaps = overlap_intervals(
         coords[:, 2], coords[:, 3], extra_coords[:, 2], extra_coords[:, 3]
     )
     overlaps = yoverlaps[(yoverlaps[:, None] == xoverlaps).all(-1).any(-1)]
