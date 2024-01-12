@@ -2,4 +2,4 @@ sphinx>=6,<7
 ipykernel
 nbsphinx
 sphinx_rtd_theme
-pandoc>=2.14.2<4.0.0
+pandoc>=2.14.2,<4.0.0
