@@ -349,12 +349,12 @@ def adjust_text(
     force_pull: tuple[float, float] = (0.01, 0.01),
     force_explode: tuple[float, float] = (0.01, 0.02),
     expand: tuple[float, float] = (1.05, 1.1),
-    explode_radius="auto",
-    ensure_inside_axes=True,
-    expand_axes=False,
-    only_move={"text": "xy", "static": "xy", "explode": "xy", "pull": "xy"},
-    ax=None,
-    min_arrow_len=5,
+    explode_radius: str|float = "auto",
+    ensure_inside_axes: bool = True,
+    expand_axes: bool = False,
+    only_move: dict = {"text": "xy", "static": "xy", "explode": "xy", "pull": "xy"},
+    ax: matplotlib.axes.Axes|None = None,
+    min_arrow_len: float = 5,
     time_lim: float | None = None,
     iter_lim: int | None = None,
     *args,
@@ -368,9 +368,10 @@ def adjust_text(
     the axes, and without knowing the final size of the plots the
     results will be completely nonsensical, or suboptimal.
 
-    First moves all texts that are outside the axes limits
-    inside. Then in each iteration moves all texts away from each
-    other and from points. In the end hides texts and substitutes them
+    First "explodes" all texts to move them apart.
+    Then in each iteration pushed all texts away from each other, and any specified
+    points or objects. At the same time slowly tries to pull the texts closer to their
+    origianal locations that they label. In the end hides texts and substitutes them
     with annotations to link them to the respective points.
 
     Parameters
@@ -406,7 +407,7 @@ def adjust_text(
         bounding box of texts when repelling them from each other.
     explode_radius : float or "auto", default "auto"
         how far to check for nearest objects to move the texts away in the beginning
-        in display units, so on the order of 100 is the typical value
+        in display units, so on the order of 100 is the typical value.
         "auto" uses the size of the largest text
     ensure_inside_axes : bool, default True
         Whether to force texts to stay inside the axes
@@ -417,7 +418,7 @@ def adjust_text(
         types of overlaps.
         Valid keys are 'text', 'static', 'explode' and 'pull'.
         Valid values are '', 'x', 'y', and 'xy'.
-    ax : matplotlib axe, default is current axe (plt.gca())
+    ax : matplotlib axes, default is current axes (plt.gca())
         ax object with the plot
     min_arrow_len : float, default 5
         If the text is closer than this to the target point, don't add an arrow
