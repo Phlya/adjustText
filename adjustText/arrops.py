@@ -1,7 +1,5 @@
 # Code copied from bioframe.core.arrops
 import numpy as np
-import pandas as pd
-import warnings
 
 def arange_multi(starts, stops=None, lengths=None):
     """
@@ -78,14 +76,7 @@ def overlap_intervals(starts1, ends1, starts2, ends2, closed=False, sort=False):
 
     """
 
-    for vec in [starts1, ends1, starts2, ends2]:
-        if isinstance(vec, pd.Series):
-            warnings.warn(
-                "One of the inputs is provided as pandas.Series and its index "
-                "will be ignored.",
-                SyntaxWarning,
-            )
-
+    # Convert to numpy arrays
     starts1 = np.asarray(starts1)
     ends1 = np.asarray(ends1)
     starts2 = np.asarray(starts2)
