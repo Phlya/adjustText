@@ -369,10 +369,10 @@ def adjust_text(
     results will be completely nonsensical, or suboptimal.
 
     First "explodes" all texts to move them apart.
-    Then in each iteration pushed all texts away from each other, and any specified
+    Then in each iteration pushes all texts away from each other, and any specified
     points or objects. At the same time slowly tries to pull the texts closer to their
-    origianal locations that they label. In the end hides texts and substitutes them
-    with annotations to link them to the respective points.
+    origianal locations that they label (this reduces chances that a text ends up super
+    far away). In the end adds arrows connecting the texts to the respective points.
 
     Parameters
     ----------
