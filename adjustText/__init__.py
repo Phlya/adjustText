@@ -215,7 +215,7 @@ def force_into_bbox(coords, bbox):
     if np.any((coords[:, 0] < xmin) & (coords[:, 1] > xmax)):
         logging.warn("Some labels are too long, can't fit inside the X axis")
     if np.any((coords[:, 2] < ymin) & (coords[:, 3] > ymax)):
-        logging.warn("Some labels are too toll, can't fit inside the Y axis")
+        logging.warn("Some labels are too tall, can't fit inside the Y axis")
     dx[coords[:, 0] < xmin] = (xmin - coords[:, 0])[coords[:, 0] < xmin]
     dx[coords[:, 1] > xmax] = (xmax - coords[:, 1])[coords[:, 1] > xmax]
     dy[coords[:, 2] < ymin] = (ymin - coords[:, 2])[coords[:, 2] < ymin]
