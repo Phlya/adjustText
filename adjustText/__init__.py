@@ -191,16 +191,16 @@ def expand_coords(coords, x_frac, y_frac):
 
 
 def expand_axes_to_fit(coords, ax, transform):
-    max_x, max_y = np.max(transform.transform(coords[:, [1, 3]]), axis=0)
-    min_x, min_y = np.min(transform.transform(coords[:, [1, 3]]), axis=0)
+    max_x, max_y = np.max(transform.inverted().transform(coords[:, [1, 3]]), axis=0)
+    min_x, min_y = np.min(transform.inverted().transform(coords[:, [0, 2]]), axis=0)
     if min_x < ax.get_xlim()[0]:
         ax.set_xlim(xmin=min_x)
     if min_y < ax.get_ylim()[0]:
         ax.set_ylim(ymin=min_y)
-    if max_x < ax.get_xlim()[1]:
-        ax.set_xlim(xmin=max_x)
-    if max_y < ax.get_ylim()[1]:
-        ax.set_ylim(ymin=max_y)
+    if max_x > ax.get_xlim()[1]:
+        ax.set_xlim(xmax=max_x)
+    if max_y > ax.get_ylim()[1]:
+        ax.set_ylim(ymax=max_y)
 
 
 def apply_shifts(coords, shifts_x, shifts_y):
@@ -492,6 +492,9 @@ def adjust_text(
             ]
         )
 
+    if expand_axes:
+        expand_axes_to_fit(coords, ax, transform)
+
     if objects is None:
         obj_coords = np.empty((0, 4))
     else:
@@ -522,8 +525,6 @@ def adjust_text(
     # expands = list(zip(np.linspace(expand_start[0], expand_end[0], expand_steps),
     #                 np.linspace(expand_start[1], expand_end[1], expand_steps)))
 
-    if expand_axes:
-        expand_axes_to_fit(coords, ax, transform)
     if ensure_inside_axes:
         ax_bbox = ax.patch.get_extents()
         ax_bbox = ax_bbox.xmin, ax_bbox.xmax, ax_bbox.ymin, ax_bbox.ymax
