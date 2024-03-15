@@ -22,21 +22,21 @@ def get_renderer(fig):
     # If the backend support get_renderer() or renderer, use that.
     if hasattr(fig.canvas, "get_renderer"):
         return fig.canvas.get_renderer()
-    
+
     if hasattr(fig.canvas, "renderer"):
         return fig.canvas.renderer
-    
+
     # Otherwise, if we have the matplotlib function available, use that.
     if matplot_get_renderer:
         return matplot_get_renderer(fig)
-    
+
     # No dice, try and guess.
     # Write the figure to a temp location, and then retrieve whichever
     # render was used (doesn't work in all matplotlib versions).
     fig.canvas.print_figure(io.BytesIO())
     try:
         return fig._cachedRenderer
-        
+
     except AttributeError:
         # No luck.
         # We're out of options.
@@ -287,46 +287,46 @@ def iterate(
     # pull_y[error_y != 0] = 0
 
     if only_move:
-        if "x" not in only_move["text"]:
+        if "x" not in only_move.get("text", "xy"):
             text_shifts_x = np.zeros_like(text_shifts_x)
-        elif "x+" in only_move["text"]:
+        elif "x+" in only_move.get("text", "xy"):
             text_shifts_x[text_shifts_x > 0] = 0
-        elif "x-" in only_move["text"]:
+        elif "x-" in only_move.get("text", "xy"):
             text_shifts_x[text_shifts_x < 0] = 0
 
-        if "y" not in only_move["text"]:
+        if "y" not in only_move.get("text", "xy"):
             text_shifts_y = np.zeros_like(text_shifts_y)
-        elif "y+" in only_move["text"]:
+        elif "y+" in only_move.get("text", "xy"):
             text_shifts_y[text_shifts_y > 0] = 0
-        elif "y-" in only_move["text"]:
+        elif "y-" in only_move.get("text", "xy"):
             text_shifts_y[text_shifts_y < 0] = 0
 
-        if "x" not in only_move["static"]:
+        if "x" not in only_move.get("static", "xy"):
             static_shifts_x = np.zeros_like(static_shifts_x)
-        elif "x+" in only_move["static"]:
+        elif "x+" in only_move.get("static", "xy"):
             static_shifts_x[static_shifts_x > 0] = 0
-        elif "x-" in only_move["static"]:
+        elif "x-" in only_move.get("static", "xy"):
             static_shifts_x[static_shifts_x < 0] = 0
 
-        if "y" not in only_move["static"]:
+        if "y" not in only_move.get("static", "xy"):
             static_shifts_y = np.zeros_like(static_shifts_y)
-        elif "y+" in only_move["static"]:
+        elif "y+" in only_move.get("static", "xy"):
             static_shifts_y[static_shifts_y > 0] = 0
-        elif "y-" in only_move["static"]:
+        elif "y-" in only_move.get("static", "xy"):
             static_shifts_y[static_shifts_y < 0] = 0
 
-        if "x" not in only_move["pull"]:
+        if "x" not in only_move.get("pull", "xy"):
             pull_x = np.zeros_like(pull_x)
-        elif "x+" in only_move["pull"]:
+        elif "x+" in only_move.get("pull", "xy"):
             pull_x[pull_x > 0] = 0
-        elif "x-" in only_move["pull"]:
+        elif "x-" in only_move.get("pull", "xy"):
             pull_x[pull_x < 0] = 0
 
-        if "y" not in only_move["pull"]:
+        if "y" not in only_move.get("pull", "xy"):
             pull_y = np.zeros_like(pull_y)
-        elif "y+" in only_move["pull"]:
+        elif "y+" in only_move.get("pull", "xy"):
             pull_y[pull_y > 0] = 0
-        elif "y-" in only_move["pull"]:
+        elif "y-" in only_move.get("pull", "xy"):
             pull_y[pull_y < 0] = 0
 
     shifts_x = text_shifts_x + static_shifts_x + pull_x
@@ -349,11 +349,11 @@ def adjust_text(
     force_pull: tuple[float, float] = (0.01, 0.01),
     force_explode: tuple[float, float] = (0.01, 0.02),
     expand: tuple[float, float] = (1.05, 1.1),
-    explode_radius: str|float = "auto",
+    explode_radius: str | float = "auto",
     ensure_inside_axes: bool = True,
     expand_axes: bool = False,
     only_move: dict = {"text": "xy", "static": "xy", "explode": "xy", "pull": "xy"},
-    ax: matplotlib.axes.Axes|None = None,
+    ax: matplotlib.axes.Axes | None = None,
     min_arrow_len: float = 5,
     time_lim: float | None = None,
     iter_lim: int | None = None,
@@ -503,9 +503,9 @@ def adjust_text(
         )
     if explode_radius > 0 and np.all(np.asarray(force_explode) > 0):
         explode_x, explode_y = explode(coords, static_coords, explode_radius)
-        if "x" not in only_move["explode"]:
+        if "x" not in only_move.get("explode", "xy"):
             explode_x = np.zeros_like(explode_x)
-        if "y" not in only_move["explode"]:
+        if "y" not in only_move.get("explode", "xy"):
             explode_y = np.zeros_like(explode_y)
         coords = apply_shifts(
             coords, -explode_x * force_explode[0], -explode_y * force_explode[1]
