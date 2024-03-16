@@ -224,8 +224,8 @@ def force_into_bbox(coords, bbox):
 
 
 def pull_back(coords, targets):
-    dx = np.min(np.subtract(targets[:, 0][:, np.newaxis], coords[:, :2]), axis=1)
-    dy = np.min(np.subtract(targets[:, 1][:, np.newaxis], coords[:, 2:]), axis=1)
+    dx = np.max(np.subtract(targets[:, 0][:, np.newaxis], coords[:, :2]), axis=1)
+    dy = np.max(np.subtract(targets[:, 1][:, np.newaxis], coords[:, 2:]), axis=1)
     return dx, dy
 
 
@@ -251,11 +251,12 @@ def explode(coords, static_coords, r=None):
 
 def iterate(
     coords,
-    orig_coords,
+    target_coords,
     static_coords=None,
     force_text: tuple[float, float] = (0.1, 0.2),
     force_static: tuple[float, float] = (0.05, 0.1),
     force_pull: tuple[float, float] = (0.05, 0.1),
+    pull_threshold: float = 10,
     expand: tuple[float, float] = (1.05, 1.1),
     bbox_to_contain=False,
     only_move={"text": "xy", "static": "xy", "explode": "xy", "pull": "xy"},
@@ -274,7 +275,10 @@ def iterate(
     error_y = np.abs(text_shifts_y) + np.abs(static_shifts_y)
     error = np.sum(np.append(error_x, error_y))
 
-    pull_x, pull_y = pull_back(coords, orig_coords)
+    pull_x, pull_y = pull_back(coords, target_coords)
+
+    pull_x[np.abs(pull_x) < pull_threshold] = 0
+    pull_y[np.abs(pull_y) < pull_threshold] = 0
 
     text_shifts_x *= force_text[0]
     text_shifts_y *= force_text[1]
@@ -338,8 +342,22 @@ def iterate(
     return coords, error
 
 
+def force_draw(ax):
+    try:
+        ax.figure.draw_without_rendering()
+    except AttributeError:
+        logging.warn(
+            """Looks like you are using an old matplotlib version.
+               In some cases adjust_text might fail, if possible update
+               matplotlib to version >=3.5.0"""
+        )
+        ax.figure.canvas.draw()
+
+
 def adjust_text(
     texts,
+    target_x=None,
+    target_y=None,
     x=None,
     y=None,
     objects=None,
@@ -348,6 +366,7 @@ def adjust_text(
     force_static: tuple[float, float] = (0.1, 0.2),
     force_pull: tuple[float, float] = (0.01, 0.01),
     force_explode: tuple[float, float] = (0.01, 0.02),
+    pull_threshold: float = 10,
     expand: tuple[float, float] = (1.05, 1.1),
     explode_radius: str | float = "auto",
     ensure_inside_axes: bool = True,
@@ -381,12 +400,18 @@ def adjust_text(
 
     Other Parameters
     ----------------
+    target_x : array_like
+        x-coordinates of points to connect to; if not provided only uses the original
+        text coordinates.
+    target_y : array_like
+        y-coordinates of points to connect to; if not provided only uses the original
+        text coordinates.
     x : array_like
-        x-coordinates of points to repel from; if not provided only uses text
-        coordinates.
+        x-coordinates of points to repel from; if not provided only uses the original
+        text coordinates.
     y : array_like
-        y-coordinates of points to repel from; if not provided only uses text
-        coordinates
+        y-coordinates of points to repel from; if not provided only uses the original
+        text coordinates
     objects : list or PathCollection
         a list of additional matplotlib objects to avoid; they must have a
         `.get_window_extent()` method; alternatively, a PathCollection or a
@@ -402,13 +427,16 @@ def adjust_text(
     force_explode : float, default (0.01, 0.02)
         same as other forces, but for the forced move of texts away from nearby texts
         and static positions before iterative adjustment
+    pull_threshold : float, default 10
+        how close to the original position the text should be pulled (if it's closer
+        along one of the axes, don't pull along it) - in display coordinates
     expand : array_like, default (1.05, 1.1)
         a tuple/list/... with 2 multipliers (x, y) by which to expand the
         bounding box of texts when repelling them from each other.
     explode_radius : float or "auto", default "auto"
         how far to check for nearest objects to move the texts away in the beginning
         in display units, so on the order of 100 is the typical value.
-        "auto" uses the size of the largest text
+        "auto" uses double the size of the largest text
     ensure_inside_axes : bool, default True
         Whether to force texts to stay inside the axes
     expand_axes : bool, default False
@@ -440,15 +468,9 @@ def adjust_text(
         return
     if ax is None:
         ax = plt.gca()
-    try:
-        ax.figure.draw_without_rendering()
-    except AttributeError:
-        logging.warn(
-            """Looks like you are using an old matplotlib version.
-               In some cases adjust_text might fail, if possible update
-               matplotlib to version >=3.5.0"""
-        )
-        ax.figure.canvas.draw()
+
+    force_draw(ax)
+
     try:
         transform = texts[0].get_transform()
     except IndexError:
@@ -461,11 +483,20 @@ def adjust_text(
     elif time_lim is not None and iter_lim is not None:
         logging.warn("Both time_lim and iter_lim are set, faster will be used")
     start_time = timer()
-
-    orig_xy = [text.get_unitless_position() for text in texts]
-    orig_xy_disp_coord = transform.transform(orig_xy)
     coords = get_2d_coordinates(texts)
 
+    if expand_axes:
+        expand_axes_to_fit(coords, ax, transform)
+        force_draw(ax)
+        transform = texts[0].get_transform()
+        coords = get_2d_coordinates(texts)
+
+    target_xy = (
+        list(zip(target_x, target_y))
+        if target_x is not None and target_y is not None
+        else [text.get_unitless_position() for text in texts]
+    )
+    target_xy_disp_coord = transform.transform(target_xy)
     if isinstance(only_move, str):
         only_move = {
             "text": only_move,
@@ -492,18 +523,16 @@ def adjust_text(
             ]
         )
 
-    if expand_axes:
-        expand_axes_to_fit(coords, ax, transform)
-
     if objects is None:
         obj_coords = np.empty((0, 4))
     else:
         obj_coords = get_2d_coordinates(objects)
     static_coords = np.vstack([point_coords[:, [0, 0, 1, 1]], obj_coords])
     if explode_radius == "auto":
-        explode_radius = max(
+        explode_radius = 2 * max(
             (coords[:, 1] - coords[:, 0]).max(), (coords[:, 3] - coords[:, 2]).max()
         )
+        logging.debug(f"Auto-explode radius: {explode_radius}")
     if explode_radius > 0 and np.all(np.asarray(force_explode) > 0):
         explode_x, explode_y = explode(coords, static_coords, explode_radius)
         if "x" not in only_move.get("explode", "xy"):
@@ -536,11 +565,12 @@ def adjust_text(
         # expand = expands[min(i, expand_steps-1)]
         coords, error = iterate(
             coords,
-            orig_xy_disp_coord,
+            target_xy_disp_coord,
             static_coords,
             force_text=force_text,
             force_static=force_static,
             force_pull=force_pull,
+            pull_threshold=pull_threshold,
             expand=expand,
             bbox_to_contain=ax_bbox,
             only_move=only_move,
@@ -552,12 +582,16 @@ def adjust_text(
         if iter_lim is not None and i == iter_lim:
             break
 
+    logging.debug(f"Adjustment took {i} iterations")
+    logging.debug(f"Time: {timer() - start_time}")
+    logging.debug(f"Error: {error}")
+
     xdists = np.min(
-        np.abs(np.subtract(coords[:, :2], orig_xy_disp_coord[:, 0][:, np.newaxis])),
+        np.abs(np.subtract(coords[:, :2], target_xy_disp_coord[:, 0][:, np.newaxis])),
         axis=1,
     )
     ydists = np.min(
-        np.abs(np.subtract(coords[:, 2:], orig_xy_disp_coord[:, 1][:, np.newaxis])),
+        np.abs(np.subtract(coords[:, 2:], target_xy_disp_coord[:, 1][:, np.newaxis])),
         axis=1,
     )
     display_dists = np.max(np.vstack([xdists, ydists]), axis=0)
@@ -566,7 +600,7 @@ def adjust_text(
         [
             np.mean(coords[:, :2], axis=1)[:, np.newaxis],
             np.mean(coords[:, 2:], axis=1)[:, np.newaxis],
-            orig_xy_disp_coord,
+            target_xy_disp_coord,
         ]
     )  # For the future to move into the loop and resolve crossing connections
 
