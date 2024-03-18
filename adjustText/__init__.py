@@ -79,12 +79,12 @@ def get_bboxes_pathcollection(sc, ax):
             result = get_path_collection_extents(
                 transform.frozen(), [p], [t], [o], transOffset.frozen()
             )
-            bboxes.append(result)
+            bboxes.append(result.transformed(ax.transData.inverted()))
 
     return bboxes
 
 
-def get_bboxes(objs, r=None, expand=(1, 1), ax=None, transform=None):
+def get_bboxes(objs, r=None, expand=(1, 1), ax=None):
     """
 
 
@@ -98,9 +98,6 @@ def get_bboxes(objs, r=None, expand=(1, 1), ax=None, transform=None):
         How much to expand bboxes in (x, y), in fractions. The default is (1, 1).
     ax : Axes, optional
         The default is None, then uses current axes.
-    transform : optional
-        Transform to apply to the objects, if they don't return they window extent.
-        The default is None, then applies the default ax transform.
 
     Returns
     -------
@@ -110,6 +107,11 @@ def get_bboxes(objs, r=None, expand=(1, 1), ax=None, transform=None):
     """
     ax = ax or plt.gca()
     r = r or get_renderer(ax.get_figure())
+    try:
+        objs = [i.get_bbox() for i in objs]
+    except (AttributeError, TypeError):
+        pass
+
     try:
         return [i.get_window_extent(r).expanded(*expand) for i in objs]
     except (AttributeError, TypeError):
