@@ -287,8 +287,8 @@ def iterate(
     # Pull is in the opposite direction, so need to negate it
     pull_x *= -force_pull[0]
     pull_y *= -force_pull[1]
-    # pull_x[error_x != 0] = 0
-    # pull_y[error_y != 0] = 0
+    pull_x[error_x != 0] = 0
+    pull_y[error_y != 0] = 0
 
     if only_move:
         if "x" not in only_move.get("text", "xy"):
@@ -336,6 +336,11 @@ def iterate(
     shifts_x = text_shifts_x + static_shifts_x + pull_x
     shifts_y = text_shifts_y + static_shifts_y + pull_y
 
+    # shifts_x = np.ceil(shifts_x)
+    # shifts_y = np.ceil(shifts_y)
+    shifts_x = np.sign(shifts_x) * np.ceil(np.abs(shifts_x))
+    shifts_y = np.sign(shifts_y) * np.ceil(np.abs(shifts_y))
+
     coords = apply_shifts(coords, shifts_x, shifts_y)
     if bbox_to_contain:
         coords = force_into_bbox(coords, bbox_to_contain)
@@ -356,18 +361,18 @@ def force_draw(ax):
 
 def adjust_text(
     texts,
-    target_x=None,
-    target_y=None,
     x=None,
     y=None,
     objects=None,
+    target_x=None,
+    target_y=None,
     avoid_self=True,
     force_text: tuple[float, float] = (0.1, 0.2),
     force_static: tuple[float, float] = (0.1, 0.2),
     force_pull: tuple[float, float] = (0.01, 0.01),
-    force_explode: tuple[float, float] = (0.01, 0.02),
+    force_explode: tuple[float, float] = (0.05, 0.05),
     pull_threshold: float = 10,
-    expand: tuple[float, float] = (1.05, 1.1),
+    expand: tuple[float, float] = (1.05, 1.2),
     explode_radius: str | float = "auto",
     ensure_inside_axes: bool = True,
     expand_axes: bool = False,
@@ -400,12 +405,6 @@ def adjust_text(
 
     Other Parameters
     ----------------
-    target_x : array_like
-        x-coordinates of points to connect to; if not provided only uses the original
-        text coordinates.
-    target_y : array_like
-        y-coordinates of points to connect to; if not provided only uses the original
-        text coordinates.
     x : array_like
         x-coordinates of points to repel from; if not provided only uses the original
         text coordinates.
@@ -416,27 +415,33 @@ def adjust_text(
         a list of additional matplotlib objects to avoid; they must have a
         `.get_window_extent()` method; alternatively, a PathCollection or a
         list of Bbox objects.
+    target_x : array_like
+        x-coordinates of points to connect to; if not provided only uses the original
+        text coordinates.
+    target_y : array_like
+        y-coordinates of points to connect to; if not provided only uses the original
+        text coordinates.
     avoid_self : bool, default True
         whether to repel texts from its original positions.
     force_text : tuple, default (0.1, 0.2)
         the repel force from texts is multiplied by this value
     force_static : tuple, default (0.1, 0.2)
         the repel force from points and objects is multiplied by this value
-    force_pull : tuple, default (0.01, 0.01)
+    force_pull : tuple, default (0.1, 0.1)
         same as other forces, but for pulling texts back to original positions
-    force_explode : float, default (0.01, 0.02)
+    force_explode : float, default (0.1, 0.2)
         same as other forces, but for the forced move of texts away from nearby texts
         and static positions before iterative adjustment
     pull_threshold : float, default 10
         how close to the original position the text should be pulled (if it's closer
         along one of the axes, don't pull along it) - in display coordinates
-    expand : array_like, default (1.05, 1.1)
+    expand : array_like, default (1.05, 1.2)
         a tuple/list/... with 2 multipliers (x, y) by which to expand the
         bounding box of texts when repelling them from each other.
     explode_radius : float or "auto", default "auto"
         how far to check for nearest objects to move the texts away in the beginning
         in display units, so on the order of 100 is the typical value.
-        "auto" uses double the size of the largest text
+        "auto" uses the mean size of the texts
     ensure_inside_axes : bool, default True
         Whether to force texts to stay inside the axes
     expand_axes : bool, default False
@@ -454,7 +459,7 @@ def adjust_text(
     time_lim : float, default None
         How much time to allow for the adjustments, in seconds.
         If both `time_lim` and iter_lim are set, faster will be used.
-        If both are None, `time_lim` is set to 0.5 seconds.
+        If both are None, `time_lim` is set to 1 seconds.
     iter_lim : int, default None
         How many iterations to allow for the adjustments.
         If both `time_lim` and iter_lim are set, faster will be used.
@@ -479,7 +484,7 @@ def adjust_text(
         )
         return
     if time_lim is None and iter_lim is None:
-        time_lim = 0.5
+        time_lim = 1
     elif time_lim is not None and iter_lim is not None:
         logging.warn("Both time_lim and iter_lim are set, faster will be used")
     start_time = timer()
@@ -491,10 +496,13 @@ def adjust_text(
         transform = texts[0].get_transform()
         coords = get_2d_coordinates(texts)
 
+    original_coords = [text.get_unitless_position() for text in texts]
+    original_coords_disp_coord = transform.transform(original_coords)
+
     target_xy = (
         list(zip(target_x, target_y))
-        if target_x is not None and target_y is not None
-        else [text.get_unitless_position() for text in texts]
+        if (target_x is not None and target_y is not None)
+        else original_coords
     )
     target_xy_disp_coord = transform.transform(target_xy)
     if isinstance(only_move, str):
@@ -511,17 +519,7 @@ def adjust_text(
     else:
         point_coords = np.empty((0, 2))
     if avoid_self:
-        point_coords = np.vstack(
-            [
-                point_coords,
-                np.hstack(
-                    [
-                        np.mean(coords[:, :2], axis=1)[:, np.newaxis],
-                        np.mean(coords[:, 2:], axis=1)[:, np.newaxis],
-                    ]
-                ),
-            ]
-        )
+        point_coords = np.vstack([point_coords, original_coords_disp_coord])
 
     if objects is None:
         obj_coords = np.empty((0, 4))
@@ -529,8 +527,8 @@ def adjust_text(
         obj_coords = get_2d_coordinates(objects)
     static_coords = np.vstack([point_coords[:, [0, 0, 1, 1]], obj_coords])
     if explode_radius == "auto":
-        explode_radius = 2 * max(
-            (coords[:, 1] - coords[:, 0]).max(), (coords[:, 3] - coords[:, 2]).max()
+        explode_radius = max(
+            (coords[:, 1] - coords[:, 0]).mean(), (coords[:, 3] - coords[:, 2]).mean()
         )
         logging.debug(f"Auto-explode radius: {explode_radius}")
     if explode_radius > 0 and np.all(np.asarray(force_explode) > 0):
