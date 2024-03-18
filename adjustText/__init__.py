@@ -406,21 +406,25 @@ def adjust_text(
     Other Parameters
     ----------------
     x : array_like
-        x-coordinates of points to repel from; if not provided only uses the original
-        text coordinates.
+        x-coordinates of points to repel from; with avoid_self=True, the original
+        text coordinates will be added to this array
     y : array_like
-        y-coordinates of points to repel from; if not provided only uses the original
-        text coordinates
+        y-coordinates of points to repel from; with avoid_self=True, the original
+        text coordinates will be added to this array
     objects : list or PathCollection
         a list of additional matplotlib objects to avoid; they must have a
         `.get_window_extent()` method; alternatively, a PathCollection or a
         list of Bbox objects.
     target_x : array_like
-        x-coordinates of points to connect to; if not provided only uses the original
-        text coordinates.
+        if provided, x-coordinates of points to connect adjusted texts to; if not
+        provided, uses the original text coordinates.
+        Provide together with target_y.
+        Should be the same length as texts and in the same order, or None.
     target_y : array_like
-        y-coordinates of points to connect to; if not provided only uses the original
-        text coordinates.
+        if provided, y-coordinates of points to connect adjusted texts to; if not
+        provided, uses the original text coordinates.
+        Provide together with target_x.
+        Should be the same length as texts and in the same order, or None.
     avoid_self : bool, default True
         whether to repel texts from its original positions.
     force_text : tuple, default (0.1, 0.2)
@@ -450,7 +454,10 @@ def adjust_text(
         a dict to restrict movement of texts to only certain axes for certain
         types of overlaps.
         Valid keys are 'text', 'static', 'explode' and 'pull'.
-        Valid values are '', 'x', 'y', and 'xy'.
+        Can contain 'x', 'y', 'x+', 'x-', 'y+', 'y-', or combinations of one 'x?' and
+        one 'y?'. 'x' and 'y' mean that the text can move in that direction, 'x+' and
+        'x-' mean that the text can move in the positive or negative direction along
+        the x axis, and similarly for 'y+' and 'y-'.
     ax : matplotlib axes, default is current axes (plt.gca())
         ax object with the plot
     min_arrow_len : float, default 5
@@ -463,7 +470,7 @@ def adjust_text(
     iter_lim : int, default None
         How many iterations to allow for the adjustments.
         If both `time_lim` and iter_lim are set, faster will be used.
-        If both are None, `time_lim` is set to 0.5 seconds.
+        If both are None, `time_lim` is set to 1 seconds.
     args and kwargs :
         any arguments will be fed into obj:`FancyArrowPatch` after all the
         optimization is done just for plotting the connecting arrows if
