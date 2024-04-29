@@ -233,7 +233,7 @@ def pull_back(coords, targets):
     return dx, dy
 
 
-def explode(coords, static_coords, r=None):
+def explode(coords, static_coords, max_move, r=None):
     N = coords.shape[0]
     x = coords[:, [0, 1]].mean(axis=1)
     y = coords[:, [2, 3]].mean(axis=1)
@@ -248,8 +248,12 @@ def explode(coords, static_coords, r=None):
     pairs = pairs[pairs[:, 0] < N]
     pairs = pairs[pairs[:, 0] != pairs[:, 1]]
     diff = points[pairs[:, 0]] - points[pairs[:, 1]]
-    xshifts = np.bincount(pairs[:, 0], diff[:, 0], minlength=N)
-    yshifts = np.bincount(pairs[:, 0], diff[:, 1], minlength=N)
+    xshifts = np.clip(
+        np.bincount(pairs[:, 0], diff[:, 0], minlength=N), -max_move[0], max_move[0]
+    )
+    yshifts = np.clip(
+        np.bincount(pairs[:, 0], diff[:, 1], minlength=N), -max_move[1], max_move[1]
+    )
     return xshifts, yshifts
 
 
@@ -262,10 +266,10 @@ def iterate(
     force_pull: tuple[float, float] = (0.05, 0.1),
     pull_threshold: float = 10,
     expand: tuple[float, float] = (1.05, 1.1),
+    max_move: tuple[int, int] = (10, 10),
     bbox_to_contain=False,
     only_move={"text": "xy", "static": "xy", "explode": "xy", "pull": "xy"},
 ):
-
     text_shifts_x, text_shifts_y = get_shifts_texts(
         expand_coords(coords, expand[0], expand[1])
     )
@@ -340,10 +344,13 @@ def iterate(
     shifts_x = text_shifts_x + static_shifts_x + pull_x
     shifts_y = text_shifts_y + static_shifts_y + pull_y
 
-    # shifts_x = np.ceil(shifts_x)
-    # shifts_y = np.ceil(shifts_y)
-    shifts_x = np.sign(shifts_x) * np.ceil(np.abs(shifts_x))
-    shifts_y = np.sign(shifts_y) * np.ceil(np.abs(shifts_y))
+    # Ensure that the shifts are not too large
+    shifts_x = np.clip(
+        np.sign(shifts_x) * np.ceil(np.abs(shifts_x)), -max_move[0], max_move[0]
+    )
+    shifts_y = np.clip(
+        np.sign(shifts_y) * np.ceil(np.abs(shifts_y)), -max_move[1], max_move[1]
+    )
 
     coords = apply_shifts(coords, shifts_x, shifts_y)
     if bbox_to_contain:
@@ -371,12 +378,13 @@ def adjust_text(
     target_x=None,
     target_y=None,
     avoid_self=True,
-    force_text: tuple[float, float] = (0.1, 0.2),
-    force_static: tuple[float, float] = (0.1, 0.2),
-    force_pull: tuple[float, float] = (0.01, 0.01),
-    force_explode: tuple[float, float] = (0.05, 0.05),
+    force_text: tuple[float, float] | float = (0.1, 0.2),
+    force_static: tuple[float, float] | float = (0.1, 0.2),
+    force_pull: tuple[float, float] | float = (0.01, 0.01),
+    force_explode: tuple[float, float] | float = (0.1, 0.5),
     pull_threshold: float = 10,
     expand: tuple[float, float] = (1.05, 1.2),
+    max_move: tuple[int, int] | int | None = (20, 20),
     explode_radius: str | float = "auto",
     ensure_inside_axes: bool = True,
     expand_axes: bool = False,
@@ -431,13 +439,13 @@ def adjust_text(
         Should be the same length as texts and in the same order, or None.
     avoid_self : bool, default True
         whether to repel texts from its original positions.
-    force_text : tuple, default (0.1, 0.2)
+    force_text : tuple[float, float] | float, default (0.1, 0.2)
         the repel force from texts is multiplied by this value
-    force_static : tuple, default (0.1, 0.2)
+    force_static : tuple[float, float] | float, default (0.1, 0.2)
         the repel force from points and objects is multiplied by this value
-    force_pull : tuple, default (0.1, 0.1)
+    force_pull : tuple[float, float] | float, default (0.01, 0.01)
         same as other forces, but for pulling texts back to original positions
-    force_explode : float, default (0.1, 0.2)
+    force_explode : tuple[float, float] | float, default (0.1, 0.5)
         same as other forces, but for the forced move of texts away from nearby texts
         and static positions before iterative adjustment
     pull_threshold : float, default 10
@@ -446,6 +454,10 @@ def adjust_text(
     expand : array_like, default (1.05, 1.2)
         a tuple/list/... with 2 multipliers (x, y) by which to expand the
         bounding box of texts when repelling them from each other.
+    max_move : tuple[int, int] | int | None, default (20, 20)
+        the maximum distance a text can be moved in one iteration in display units
+        (in x and y directions); if a single integer or float is provided, it will be used for
+        both x and y
     explode_radius : float or "auto", default "auto"
         how far to check for nearest objects to move the texts away in the beginning
         in display units, so on the order of 100 is the typical value.
@@ -539,13 +551,33 @@ def adjust_text(
         obj_coords[:, [0, 2]] = transform.transform(obj_coords[:, [0, 2]])
         obj_coords[:, [1, 3]] = transform.transform(obj_coords[:, [1, 3]])
     static_coords = np.vstack([point_coords[:, [0, 0, 1, 1]], obj_coords])
+
+    if isinstance(max_move, int):
+        max_move = (max_move, max_move)
+    elif max_move is None:
+        max_move = (np.Inf, np.Inf)
+
+    if isinstance(force_explode, float):
+        force_explode = (force_explode, force_explode)
+
+    if isinstance(force_text, float):
+        force_text = (force_text, force_text)
+
+    if isinstance(force_static, float):
+        force_static = (force_static, force_static)
+
+    if isinstance(force_pull, float):
+        force_pull = (force_pull, force_pull)
+
     if explode_radius == "auto":
         explode_radius = max(
             (coords[:, 1] - coords[:, 0]).mean(), (coords[:, 3] - coords[:, 2]).mean()
         )
         logging.debug(f"Auto-explode radius: {explode_radius}")
     if explode_radius > 0 and np.all(np.asarray(force_explode) > 0):
-        explode_x, explode_y = explode(coords, static_coords, explode_radius)
+        explode_x, explode_y = explode(
+            coords, static_coords, max_move=max_move, r=explode_radius
+        )
         if "x" not in only_move.get("explode", "xy"):
             explode_x = np.zeros_like(explode_x)
         if "y" not in only_move.get("explode", "xy"):
@@ -583,6 +615,7 @@ def adjust_text(
             force_pull=force_pull,
             pull_threshold=pull_threshold,
             expand=expand,
+            max_move=max_move,
             bbox_to_contain=ax_bbox,
             only_move=only_move,
         )
