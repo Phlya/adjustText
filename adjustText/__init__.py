@@ -1,21 +1,25 @@
 from __future__ import division, annotations
+
+from .arrops import overlap_intervals
+from ._version import __version__
+
+from functools import lru_cache
 import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.patches import FancyArrowPatch
 from matplotlib.path import get_path_collection_extents
 import scipy.spatial.distance
-import logging
+from logging import getLogger
 from timeit import default_timer as timer
 import io
+
+logger = getLogger(__name__)
 
 try:
     from matplotlib.backend_bases import _get_renderer as matplot_get_renderer
 except ImportError:
     matplot_get_renderer = None
-
-from .arrops import overlap_intervals
-from ._version import __version__
 
 
 def get_renderer(fig):
@@ -217,9 +221,9 @@ def force_into_bbox(coords, bbox):
     xmin, xmax, ymin, ymax = bbox
     dx, dy = np.zeros((coords.shape[0])), np.zeros((coords.shape[0]))
     if np.any((coords[:, 0] < xmin) & (coords[:, 1] > xmax)):
-        logging.warn("Some labels are too long, can't fit inside the X axis")
+        logger.warn("Some labels are too long, can't fit inside the X axis")
     if np.any((coords[:, 2] < ymin) & (coords[:, 3] > ymax)):
-        logging.warn("Some labels are too tall, can't fit inside the Y axis")
+        logger.warn("Some labels are too tall, can't fit inside the Y axis")
     dx[coords[:, 0] < xmin] = (xmin - coords[:, 0])[coords[:, 0] < xmin]
     dx[coords[:, 1] > xmax] = (xmax - coords[:, 1])[coords[:, 1] > xmax]
     dy[coords[:, 2] < ymin] = (ymin - coords[:, 2])[coords[:, 2] < ymin]
@@ -362,12 +366,17 @@ def force_draw(ax):
     try:
         ax.figure.draw_without_rendering()
     except AttributeError:
-        logging.warn(
+        logger.warn(
             """Looks like you are using an old matplotlib version.
                In some cases adjust_text might fail, if possible update
                matplotlib to version >=3.5.0"""
         )
         ax.figure.canvas.draw()
+
+
+@lru_cache(None)
+def warn_once(msg: str):
+    logger.warning(msg)
 
 
 def adjust_text(
@@ -502,14 +511,14 @@ def adjust_text(
     try:
         transform = texts[0].get_transform()
     except IndexError:
-        logging.warn(
+        logger.warn(
             "Something wrong with the texts. Did you pass a list of matplotlib text objects?"
         )
         return
     if time_lim is None and iter_lim is None:
         time_lim = 1
     elif time_lim is not None and iter_lim is not None:
-        logging.warn("Both time_lim and iter_lim are set, faster will be used")
+        logger.warn("Both time_lim and iter_lim are set, faster will be used")
     start_time = timer()
     coords = get_2d_coordinates(texts, ax)
 
@@ -573,7 +582,7 @@ def adjust_text(
         explode_radius = max(
             (coords[:, 1] - coords[:, 0]).mean(), (coords[:, 3] - coords[:, 2]).mean()
         )
-        logging.debug(f"Auto-explode radius: {explode_radius}")
+        logger.debug(f"Auto-explode radius: {explode_radius}")
     if explode_radius > 0 and np.all(np.asarray(force_explode) > 0):
         explode_x, explode_y = explode(
             coords, static_coords, max_move=max_move, r=explode_radius
@@ -626,9 +635,9 @@ def adjust_text(
         if iter_lim is not None and i == iter_lim:
             break
 
-    logging.debug(f"Adjustment took {i} iterations")
-    logging.debug(f"Time: {timer() - start_time}")
-    logging.debug(f"Error: {error}")
+    logger.debug(f"Adjustment took {i} iterations")
+    logger.debug(f"Time: {timer() - start_time}")
+    logger.debug(f"Error: {error}")
 
     xdists = np.min(
         np.abs(np.subtract(coords[:, :2], target_xy_disp_coord[:, 0][:, np.newaxis])),
@@ -665,7 +674,31 @@ def adjust_text(
         text.set_position(text_mid)
 
         if ap and display_dists[i] >= min_arrow_len:
-            arrowpatch = FancyArrowPatch(
-                posA=text_mid, posB=target, patchA=text, *args, **kwargs, **ap
-            )
-            ax.add_patch(arrowpatch)
+            try:
+                arrowpatch = FancyArrowPatch(
+                    posA=text_mid,
+                    posB=target,
+                    patchA=text,
+                    transform=transform,
+                    *args,
+                    **kwargs,
+                    **ap,
+                )
+                ax.add_patch(arrowpatch)
+            except AttributeError:
+                warn_once(
+                    "Looks like you are using a tranform that doesn't support "
+                    "FancyArrowPatch, using ax.annotate instead. The arrows might "
+                    "strike through texts. "
+                    "Increasing shrinkA in arrowprops might help."
+                )
+                ann = ax.annotate(
+                    "",
+                    xy=target,
+                    xytext=text_mid,
+                    arrowprops=ap,
+                    xycoords=transform,
+                    textcoords=transform,
+                )
+                # Theoretically something like this should avoid the arrow striking through the text, but doesn't work...
+                ann.arrow_patch.set_patchA(text)
