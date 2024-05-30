@@ -665,7 +665,7 @@ def adjust_text(
         ap = kwargs.pop("arrowprops")
     else:
         ap = {}
-
+    patches = []
     for i, text in enumerate(texts):
         text_mid = transformed_connections[i, :2]
         target = transformed_connections[i, 2:]
@@ -685,6 +685,7 @@ def adjust_text(
                     **ap,
                 )
                 ax.add_patch(arrowpatch)
+                patches.append(arrowpatch)
             except AttributeError:
                 warn_once(
                     "Looks like you are using a tranform that doesn't support "
@@ -702,3 +703,5 @@ def adjust_text(
                 )
                 # Theoretically something like this should avoid the arrow striking through the text, but doesn't work...
                 ann.arrow_patch.set_patchA(text)
+                patches.append(ann)
+    return texts, patches
