@@ -14,6 +14,7 @@ The repository with the issue tracker can be found here: https://github.com/Phly
 
    Examples.ipynb
    Examples-for-multiple-subplots.ipynb
+   Interactive_example.ipynb
 
 
 .. Indices and tables
