@@ -500,6 +500,15 @@ def adjust_text(
         any arguments will be fed into obj:`FancyArrowPatch` after all the
         optimization is done just for plotting the connecting arrows if
         required.
+
+    Returns
+    -------
+    texts : list
+        List of adjusted text objects
+    patches : list
+        List of arrows connecting the texts to the target points.
+        Typically they are :obj:`FancyArrowPatch` objects, but in some cases can be
+        :obj:`matplotlib.text.Annotation` objects with empty text strings.
     """
     if not texts:
         return
