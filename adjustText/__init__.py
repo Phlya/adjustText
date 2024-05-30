@@ -589,8 +589,17 @@ def adjust_text(
         )
         if "x" not in only_move.get("explode", "xy"):
             explode_x = np.zeros_like(explode_x)
+        elif "x+" in only_move.get("explode", "xy"):
+            explode_x[explode_x < 0] = 0
+        elif "x-" in only_move.get("explode", "xy"):
+            explode_x[explode_x > 0] = 0
         if "y" not in only_move.get("explode", "xy"):
             explode_y = np.zeros_like(explode_y)
+        elif "y+" in only_move.get("explode", "xy"):
+            explode_y[explode_y < 0] = 0
+        elif "y-" in only_move.get("explode", "xy"):
+            explode_y[explode_y > 0] = 0
+
         coords = apply_shifts(
             coords, -explode_x * force_explode[0], -explode_y * force_explode[1]
         )
