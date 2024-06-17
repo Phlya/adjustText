@@ -573,7 +573,7 @@ def adjust_text(
     if isinstance(max_move, int):
         max_move = (max_move, max_move)
     elif max_move is None:
-        max_move = (np.Inf, np.Inf)
+        max_move = (np.inf, np.inf)
 
     if isinstance(force_explode, float):
         force_explode = (force_explode, force_explode)
