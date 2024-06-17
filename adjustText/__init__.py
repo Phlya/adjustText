@@ -613,7 +613,7 @@ def adjust_text(
             coords, -explode_x * force_explode[0], -explode_y * force_explode[1]
         )
 
-    error = np.Inf
+    error = np.inf
 
     # i_0 = 100
     # i = i_0
