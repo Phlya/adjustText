@@ -1,6 +1,7 @@
 <img src="https://github.com/Phlya/adjustText/blob/master/adjustText_logo.svg" width="183">
 
 [![Documentation Status](https://readthedocs.org/projects/adjusttext/badge/?version=latest)](http://adjusttext.readthedocs.io/en/latest/?badge=latest)
+[![Mutable.ai Auto Wiki](https://img.shields.io/badge/Auto_Wiki-Mutable.ai-blue)](https://wiki.mutable.ai/Phlya/adjustText)
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/adjustText/Lobby) 
 [![DOI](https://zenodo.org/badge/49349828.svg)](https://zenodo.org/badge/latestdoi/49349828)
 [![PyPI version](https://badge.fury.io/py/adjustText.svg)](https://badge.fury.io/py/adjustText)
