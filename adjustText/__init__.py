@@ -444,7 +444,7 @@ def adjust_text(
     force_explode: tuple[float, float] | float = (0.1, 0.5),
     pull_threshold: float = 10,
     expand: tuple[float, float] = (1.05, 1.2),
-    max_move: tuple[int, int] | int | None = (5, 5),
+    max_move: tuple[int, int] | int | None = (10, 10),
     explode_radius: str | float = "auto",
     ensure_inside_axes: bool = True,
     expand_axes: bool = False,
@@ -516,7 +516,7 @@ def adjust_text(
     expand : array_like, default (1.05, 1.2)
         a tuple/list/... with 2 multipliers (x, y) by which to expand the
         bounding box of texts when repelling them from each other.
-    max_move : tuple[int, int] | int | None, default (20, 20)
+    max_move : tuple[int, int] | int | None, default (10, 10)
         the maximum distance a text can be moved in one iteration in display units
         (in x and y directions); if a single integer or float is provided, it will be used for
         both x and y
@@ -657,7 +657,7 @@ def adjust_text(
             (coords[:, 1] - coords[:, 0]).mean(), (coords[:, 3] - coords[:, 2]).mean()
         )
         logger.debug(f"Auto-explode radius: {explode_radius}")
-    if explode_radius > 0 and np.all(np.asarray(force_explode) > 0):
+    if explode_radius > 0 and np.any(np.asarray(force_explode) > 0):
         explode_x, explode_y = explode(
             coords, static_coords, max_move=max_move, r=explode_radius
         )
