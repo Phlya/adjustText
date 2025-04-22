@@ -277,7 +277,6 @@ def random_shifts(coords, only_move="xy"):
                 shifts[1] = np.abs(shifts[1])
             elif "y-" in only_move:
                 shifts[1] = -np.abs(shifts[1])
-            print(idx, shifts)
             coords[idx] += np.asarray([shifts[0], shifts[0], shifts[1], shifts[1]])
     return coords
 
