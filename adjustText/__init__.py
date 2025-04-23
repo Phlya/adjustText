@@ -69,6 +69,7 @@ def get_bboxes_pathcollection(sc, ax):
     Thank you to ImportanceOfBeingErnest
     https://stackoverflow.com/a/55007838/1304161"""
     #    ax.figure.canvas.draw() # need to draw before the transforms are set.
+    ax.figure.canvas.draw()
     transform = sc.get_transform()
     transOffset = sc.get_offset_transform()
     offsets = sc._offsets
