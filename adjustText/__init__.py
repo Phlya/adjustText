@@ -260,11 +260,15 @@ def random_shifts(coords, only_move="xy"):
     unq, count = np.unique(mids, axis=0, return_counts=True)
     repeated_groups = unq[count > 1]
 
+    if len(repeated_groups) == 0:
+        return coords
+    
+    rng = np.random.default_rng(42)
     for repeated_group in repeated_groups:
         repeated_idx = np.argwhere(np.all(mids == repeated_group, axis=1)).flatten()
         logger.debug(f"Repeating group: {repeated_group}, idx: {repeated_idx}")
         for idx in repeated_idx:
-            shifts = (np.random.rand(2) - 0.5) * 2
+            shifts = (rng.random(2) - 0.5) * 2
             if "x" not in only_move:
                 shifts[0] = 0
             elif "x+" in only_move:
