@@ -1,8 +1,7 @@
 import sys
 import os
 
-# import matplotlib
-from unittest import mock
+from adjustText import __version__
 
 sys.path.insert(0, os.path.abspath("../.."))
 # matplotlib.use("Agg")
@@ -24,7 +23,6 @@ sys.path.insert(0, os.path.abspath("../.."))
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-
 # -- Project information -----------------------------------------------------
 
 project = "adjustText"
@@ -32,7 +30,7 @@ copyright = "2018, Ilya Flyamer"
 author = "Ilya Flyamer"
 
 # The short X.Y version
-version = "1.0beta"
+version = "1.3.0"
 # The full version, including alpha/beta/rc tags
 # def get_version(path):
 #     with open(path, "r") as f:
@@ -42,6 +40,8 @@ version = "1.0beta"
 
 
 # release = get_version("../_version.py")
+
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 
@@ -56,30 +56,19 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
+    "sphinx.ext.intersphinx",
     "nbsphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
 ]
 
-
-MOCK_MODULES = [
-    "bioframe",
-    "numpy",
-    "scipy",
-    "scipy.spatial",
-    "scipy.spatial.distance",
-    "matplotlib",
-    "matplotlib.pyplot",
-    "matplotlib.patches",
-    "matplotlib.patches.FancyArrowPatch",
-    "matplotlib.path",
-    "matplotlib.path.get_path_collection_extents",
-]
-
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
-
-autodoc_mock_imports = MOCK_MODULES
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'matplotlib': ('https://matplotlib.org/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'bioframe': ('https://bioframe.readthedocs.io/en/stable/', None),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -98,7 +87,7 @@ master_doc = "index"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
