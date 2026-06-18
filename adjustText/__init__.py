@@ -147,10 +147,10 @@ def get_bboxes(objs, r=None, expand=(1, 1), ax=None):
 def get_2d_coordinates(objs, ax):
     bboxes = get_bboxes(objs, get_renderer(ax.get_figure()), (1.0, 1.0), ax)
     xs = [
-        (ax.convert_xunits(bbox.xmin), ax.convert_yunits(bbox.xmax)) for bbox in bboxes
+        (ax.convert_xunits(bbox.xmin), ax.convert_xunits(bbox.xmax)) for bbox in bboxes
     ]
     ys = [
-        (ax.convert_xunits(bbox.ymin), ax.convert_yunits(bbox.ymax)) for bbox in bboxes
+        (ax.convert_yunits(bbox.ymin), ax.convert_yunits(bbox.ymax)) for bbox in bboxes
     ]
     coords = np.hstack([np.array(xs), np.array(ys)])
     return coords
