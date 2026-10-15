@@ -48,3 +48,31 @@ http://adjusttext.readthedocs.io/en/latest/
 ## Citing **adjustText**
 
 To cite the library if you use it in scientific publications (or anywhere else, if you wish), please use the link to the GitHub repository (https://github.com/Phlya/adjustText) and a zenodo doi (see top of this page). Thank you!
+
+### Avoiding multiple scatter plots
+
+Pass the collections returned by `ax.scatter` together to `objects` to repel
+labels from the individual markers of several scatter plots:
+
+```python
+import matplotlib.pyplot as plt
+from adjustText import adjust_text
+
+fig, ax = plt.subplots()
+first = ax.scatter([1, 2], [1, 2], s=200, marker="s")
+second = ax.scatter([3, 4], [2, 1], s=400, marker="o")
+texts = [ax.text(x, y, label) for x, y, label in
+         [(1, 1, "A"), (2, 2, "B"), (3, 2, "C"), (4, 1, "D")]]
+# Finish plotting and setting axis limits before adjusting the labels.
+adjust_text(texts, objects=[first, second], ax=ax)
+plt.show()
+```
+
+Use collections from the same axes and call `adjust_text` separately for each
+subplot. A single collection remains supported; a list of collections does
+not need to be merged into a new scatter plot. Empty collections contribute
+no marker bounds.
+
+### Running tests
+
+After installing the package and `pytest`, run `python -m pytest tests`.

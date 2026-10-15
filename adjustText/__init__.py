@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.patches import FancyArrowPatch
+from matplotlib.collections import PathCollection
 from matplotlib.path import get_path_collection_extents
 import scipy.spatial.distance
 from logging import getLogger
@@ -111,7 +112,8 @@ def get_bboxes(objs, r=None, expand=(1, 1), ax=None):
     Parameters
     ----------
     objs : list, or PathCollection
-        List of objects to get bboxes from. Also works with mpl PathCollection.
+        List of objects to get bboxes from. Also works with an mpl PathCollection
+        or a list of PathCollections.
     r : renderer
         Renderer. The default is None, then automatically deduced from ax.
     expand : (float, float), optional
@@ -127,6 +129,14 @@ def get_bboxes(objs, r=None, expand=(1, 1), ax=None):
     """
     ax = ax or plt.gca()
     r = r or get_renderer(ax.get_figure())
+    if isinstance(objs, (list, tuple)) and objs and all(
+        isinstance(obj, PathCollection) for obj in objs
+    ):
+        return [
+            bbox
+            for collection in objs
+            for bbox in get_bboxes_pathcollection(collection, ax)
+        ]
     try:
         objs = [i.get_bbox() for i in objs]
     except (AttributeError, TypeError):
@@ -146,6 +156,8 @@ def get_bboxes(objs, r=None, expand=(1, 1), ax=None):
 
 def get_2d_coordinates(objs, ax):
     bboxes = get_bboxes(objs, get_renderer(ax.get_figure()), (1.0, 1.0), ax)
+    if len(bboxes) == 0:
+        return np.empty((0, 4))
     xs = [
         (ax.convert_xunits(bbox.xmin), ax.convert_yunits(bbox.xmax)) for bbox in bboxes
     ]
@@ -511,7 +523,8 @@ def adjust_text(
     objects : list or PathCollection
         a list of additional matplotlib objects to avoid; they must have a
         `.get_window_extent()` method; alternatively, a PathCollection or a
-        list of Bbox objects.
+        list of Bbox objects. A list of PathCollections is also supported; each
+        collection contributes the bounding boxes of its individual markers.
     target_x : array_like
         if provided, x-coordinates of points to connect adjusted texts to; if not
         provided, uses the original text coordinates.
