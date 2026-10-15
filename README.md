@@ -48,3 +48,7 @@ http://adjusttext.readthedocs.io/en/latest/
 ## Citing **adjustText**
 
 To cite the library if you use it in scientific publications (or anywhere else, if you wish), please use the link to the GitHub repository (https://github.com/Phlya/adjustText) and a zenodo doi (see top of this page). Thank you!
+
+### Running tests
+
+After installing the package and `pytest`, run `python -m pytest tests`.
